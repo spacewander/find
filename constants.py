@@ -10,8 +10,9 @@ OPTIONS = {
     'Time' : ['amin', 'anewer', 'atime', 'cmin', 'cnewer', 'ctime', 'mmin',
               'mtime', 'newer', 'newerXY', 'used'],
     'Type' : ['fstype', 'type', 'xtype'],
-    'Others' : ['inum', 'links']
-    # ACTIONS(user need to type ACTIONS in the Execute Command input)
+    'Others' : ['inum', 'links'],
+    'Actions' : ['delete', 'execdir', 'fls', 'fprint', 'fprint0', 'fprintf',
+                 'ls', 'ok', 'okdir', 'print', 'print0', 'printf', 'prune']
 }
 
-MENUS = ['Options', 'Name', 'Perm', 'Size', 'Time', 'Type', 'Others']
+MENUS = ['Options', 'Name', 'Perm', 'Size', 'Time', 'Type', 'Others', 'Actions']
