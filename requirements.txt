@@ -1,2 +1,2 @@
-# maybe you need to refer https://github.com/wardi/urwid/wiki/Installation-instructions for installation
+# Don't install urwid with apt-get, the package is stale. Simply install it with pip.
 urwid
