@@ -1,14 +1,11 @@
 class FindModel(object):
-    def __init__(self, view):
+    def __init__(self):
         self.cmd = 'find '
         self.exec_cmd = ''
         self.path = ''
-        self.view = view
-        self.view.bind_model(self)
 
     def reset_cmd(self):
         self.cmd = self.__generate_cmd()
-        self.view.set_cmd(self.cmd)
 
     def update_actions(self, new_actions):
         self.exec_cmd = new_actions

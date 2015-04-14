@@ -21,7 +21,7 @@ def exit_loop(success):
     raise uw.ExitMainLoop()
 
 class FindView():
-    def __init__(self):
+    def __init__(self, model):
         help = uw.Text(
             u"Click menu and edit options.\n"
             u"Fill 'Execute Command' with the command you want to execute.\n"
@@ -64,6 +64,7 @@ class FindView():
                                   self.command_input,
                                   ('weight', 0.1, ok_button),
                                   ('weight', 0.1, reset_button)]))
+        self.bind_model(model)
 
     def bind_model(self, model):
         """Bind a model bidirectionally to store and deal with data."""
@@ -92,6 +93,7 @@ class FindView():
     # Action handler
     def actions_changed(self, input, text):
         self.model.update_actions(text)
+        self.set_cmd(self.model.cmd)
 
     def command_changed(self, input, text):
         self.model.update_command(text)
@@ -105,6 +107,7 @@ class FindView():
     def path_changed(self, input, text):
         """Update path once the input changed"""
         self.model.update_path(text)
+        self.set_cmd(self.model.cmd)
 
     def reset_clicked(self, button):
         """
@@ -122,8 +125,8 @@ class FindView():
 
 
 def setup_tui():
-    view = FindView()
-    model = FindModel(view)
+    model = FindModel()
+    view = FindView(model)
     view.run()
     if EXIT_WITH_SUCCESS:
         return model.cmd
