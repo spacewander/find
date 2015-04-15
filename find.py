@@ -4,7 +4,7 @@
 import subprocess
 import sys
 
-from view import setup_tui
+from find.view import setup_tui
 
 def print_find_result(args):
     p = subprocess.Popen(args, stderr=subprocess.PIPE,

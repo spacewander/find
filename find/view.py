@@ -46,12 +46,12 @@ class FindView():
         # click it to run the command
         ok_button = uw.Button(u"OK")
         uw.connect_signal(ok_button, 'click', self.ok_clicked)
-        ok_button = uw.AttrMap(ok_button,
+        self.ok_button = uw.AttrMap(ok_button,
                                           None, focus_map='reversed')
         # click it to reset output command
-        reset_button = uw.Button(u"Rebuild")
+        reset_button = uw.Button(u"Reset")
         uw.connect_signal(reset_button, 'click', self.reset_clicked)
-        reset_button = uw.AttrMap(reset_button,
+        self.reset_button = uw.AttrMap(reset_button,
                                           None, focus_map='reversed')
 
         self.frame = uw.Frame(header=help,
@@ -62,8 +62,8 @@ class FindView():
                                      ('pack', self.path_input)]),
                               footer=uw.Columns([
                                   self.command_input,
-                                  ('weight', 0.1, ok_button),
-                                  ('weight', 0.1, reset_button)]))
+                                  ('weight', 0.1, self.ok_button),
+                                  ('weight', 0.1, self.reset_button)]))
         self.bind_model(model)
 
     def bind_model(self, model):
@@ -117,6 +117,7 @@ class FindView():
         selected options, actions input and path input.
         """
         self.model.reset_cmd()
+        self.set_cmd(self.model.cmd)
 
     #  UI change interface
     def set_cmd(self, cmd):
