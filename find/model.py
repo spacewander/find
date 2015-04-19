@@ -1,8 +1,11 @@
+from .options import OPTION_DATA
+
 class FindModel(object):
     def __init__(self):
         self.cmd = 'find '
         self.exec_cmd = ''
         self.path = ''
+        self.option_data = OPTION_DATA
 
     def reset_cmd(self):
         self.cmd = self.__generate_cmd()
