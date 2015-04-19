@@ -26,6 +26,16 @@ class ModelTest(unittest.TestCase):
         self.model.reset_cmd()
         self.assertEqual(self.cmd(), "find  -some true")
 
+    def test_reset_cmd_multi_options(self):
+        self.model.option_data['some'] = 'true'
+        self.model.option_data['any'] = 'false'
+        self.model.reset_cmd(option_changed=True)
+        # the generated options_str is unordered
+        if self.model.options_str != "-any false -some true":
+            self.assertEqual(self.model.options_str, "-some true -any false")
+        else:
+            self.assertTrue(True)
+
     def test_update_actions(self):
         self.model.update_actions('du -h')
         self.assertEqual(self.cmd(), "find   -exec du -h {} ;")
@@ -44,4 +54,9 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(self.model.option_data['some'], 'true')
         self.model.update_options('some', remove=True)
         self.assertNotIn('some', self.model.option_data)
+
+        self.model.update_options('any', 'true')
+        self.assertEqual(self.model.option_data['any'], 'true')
+        self.model.update_options('any', 'false')
+        self.assertEqual(self.model.option_data['any'], 'false')
 

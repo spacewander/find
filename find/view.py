@@ -92,7 +92,10 @@ class FindView():
                 text = uw.Text(opt.name)
 
                 if opt.type is CHECKBOX_OPTION:
-                    tool = uw.CheckBox('')
+                    tool = uw.CheckBox('',
+                                       on_state_change=self.opt_checkbox_changed,
+                                       user_data={'option_name': opt.name})
+
                 elif opt.type is RADIO_BUTTON_OPTION:
                     bgroup = []
                     # click clear means you don't need this option any more
@@ -105,12 +108,24 @@ class FindView():
                                 user_data={'option_name': opt.name})
 
                     tool = uw.Columns(bgroup)
+
                 elif opt.type is PATH_INPUT_OPTION:
                     tool = uw.Edit()
+                    uw.connect_signal(tool, 'change',
+                                      self.opt_path_input_changed,
+                                      user_args=[opt.name])
+
                 elif opt.type is TEXT_INPUT_OPTION:
                     tool = uw.Edit()
+                    uw.connect_signal(tool, 'change',
+                                      self.opt_text_input_changed,
+                                      user_args=[opt.name])
+
                 elif opt.type is INT_INPUT_OPTION:
                     tool = uw.IntEdit()
+                    uw.connect_signal(tool, 'change',
+                                      self.opt_int_input_changed,
+                                      user_args=[opt.name])
                 else:
                     raise ValueError(
                         "Unknown options type got with name %s" % opt.name)
@@ -136,18 +151,45 @@ class FindView():
     def ok_clicked(self, button):
         exit_loop(success=True)
 
+    def opt_checkbox_changed(self, cb, value, user_data):
+        if value is True:
+            self.model.update_options(user_data['option_name'], '')
+        else:
+            self.model.update_options(user_data['option_name'], remove=True)
+        self.set_cmd(self.model.cmd)
+
     def opt_radio_button_changed(self, rb, value, user_data):
-        """send the status message of options to model and change cmd"""
         # each click on a radio button will emit two changed event,
         # one for True -> False, the other for False -> True,
         # just need to handle the second one.
         if value is True:
             if rb.label is 'clear':
-                rb.set_state(False)
+                rb.set_state(False, do_callback=False)
                 self.model.update_options(user_data['option_name'], remove=True)
             else:
                 self.model.update_options(user_data['option_name'], rb.label)
             self.set_cmd(self.model.cmd)
+
+    def opt_path_input_changed(self, option_name, pi, text):
+        if text is "":
+            self.model.update_options(option_name, remove=True)
+        else:
+            self.model.update_options(option_name, text)
+        self.set_cmd(self.model.cmd)
+
+    def opt_text_input_changed(self, option_name, ti, text):
+        if text is "":
+            self.model.update_options(option_name, remove=True)
+        else:
+            self.model.update_options(option_name, text)
+        self.set_cmd(self.model.cmd)
+
+    def opt_int_input_changed(self, option_name, ii, value):
+        if value is "":
+            self.model.update_options(option_name, remove=True)
+        else:
+            self.model.update_options(option_name, str(value))
+        self.set_cmd(self.model.cmd)
 
     def path_changed(self, input, text):
         """Update path once the input changed"""

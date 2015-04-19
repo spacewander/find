@@ -9,7 +9,7 @@ class FindModel(object):
     def reset_cmd(self, option_changed=False):
         if option_changed:
             opt_str = ["-%s %s" % (opt, self.option_data[opt]) for opt in self.option_data]
-            self.options_str =  "".join(opt_str)
+            self.options_str =  " ".join(opt_str)
         self.cmd = self.__generate_cmd()
 
     def update_actions(self, new_actions):

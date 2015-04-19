@@ -88,3 +88,45 @@ class ViewTest(unittest.TestCase):
         self.view.opt_radio_button_changed(clear, True, {'option_name': 'opt'})
         self.assertEqual(self.model.options_str, "-name some")
 
+    def test_opt_checkbox_changed(self):
+        cb = uw.CheckBox('')
+        self.view.opt_checkbox_changed(cb, True, {'option_name': 'opt'})
+        self.assertEqual(self.model.options_str, "-opt ")
+        self.assertEqual(self.cmd(), "find  -opt ")
+
+        self.view.opt_checkbox_changed(cb, False, {'option_name': 'opt'})
+        self.assertEqual(self.model.options_str, "")
+        self.assertEqual(self.cmd().rstrip(), "find")
+
+    def test_opt_path_input_changed(self):
+        pi = uw.Edit()
+        self.view.opt_path_input_changed('opt', pi, "fi")
+        self.assertEqual(self.model.options_str, "-opt fi")
+        self.assertEqual(self.cmd(), "find  -opt fi")
+        self.view.opt_path_input_changed('opt', pi, "Re")
+        self.assertEqual(self.model.options_str, "-opt Re")
+
+        self.view.opt_path_input_changed('opt', pi, "")
+        self.assertEqual(self.model.options_str, "")
+
+    def test_opt_text_input_changed(self):
+        ti = uw.Edit()
+        self.view.opt_path_input_changed('opt', ti, "some")
+        self.assertEqual(self.model.options_str, "-opt some")
+        self.assertEqual(self.cmd(), "find  -opt some")
+        self.view.opt_path_input_changed('opt', ti, "else")
+        self.assertEqual(self.model.options_str, "-opt else")
+
+        self.view.opt_path_input_changed('opt', ti, "")
+        self.assertEqual(self.model.options_str, "")
+
+    def test_opt_int_input_changed(self):
+        pi = uw.Edit()
+        self.view.opt_path_input_changed('opt', pi, 3)
+        self.assertEqual(self.model.options_str, "-opt 3")
+        self.assertEqual(self.cmd(), "find  -opt 3")
+        self.view.opt_path_input_changed('opt', pi, 4)
+        self.assertEqual(self.model.options_str, "-opt 4")
+
+        self.view.opt_path_input_changed('opt', pi, "")
+        self.assertEqual(self.model.options_str, "")
