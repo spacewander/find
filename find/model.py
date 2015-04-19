@@ -24,5 +24,5 @@ class FindModel(object):
             # Use '{} ;' instead of '{} \;' or '{} +'.
             # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
             # and '{} +' is used less frequently.
-            return u"find %s -exec %s {} ;" % (self.path, self.exec_cmd)
-        return u"find %s" % (self.path)
+            return "find %s -exec %s {} ;" % (self.path, self.exec_cmd)
+        return "find %s" % (self.path)

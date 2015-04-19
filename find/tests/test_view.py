@@ -31,21 +31,22 @@ class ViewTest(unittest.TestCase):
         self.model.path = "path"
         self.model.exec_cmd = "du -h"
         self.view.reset_button.keypress((1,1), 'enter')
-        self.assertEqual(u"find path -exec du -h {} ;",
+        self.assertEqual("find path -exec du -h {} ;",
                          self.view.command_input.edit_text)
 
     def test_change_path_input(self):
-        self.view.path_input.set_edit_text(u"path")
-        cmd = u"find path"
+        self.view.path_input.set_edit_text("path")
+        cmd = "find path"
         self.assertEqual(cmd, self.model.cmd)
         self.assertEqual(cmd, self.view.command_input.edit_text)
 
     def test_change_actions_input(self):
-        self.view.actions_input.set_edit_text(u"du -h")
-        cmd = u"find  -exec du -h {} ;"
+        self.view.actions_input.set_edit_text("du -h")
+        cmd = "find  -exec du -h {} ;"
         self.assertEqual(cmd, self.model.cmd)
         self.assertEqual(cmd, self.view.command_input.edit_text)
 
     def test_change_command_input(self):
-        self.view.command_input.set_edit_text(u"find this")
-        self.assertEqual(self.model.cmd, u"find this")
+        self.view.command_input.set_edit_text("find this")
+        self.assertEqual(self.model.cmd, "find this")
+

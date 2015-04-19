@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.7_with_system_site_packages"
+  - "3.2_with_system_site_packages"
+  - "3.4"
+install:
+    - "pip install -r requirements.txt --use-mirrors"
+script:
+  - "python -m test_command && python -m unittest discover find.tests 'test_*.py'"

@@ -1,7 +1,7 @@
 import urwid as uw
 
-from constants import MENUS, OPTIONS
-from model import FindModel
+from .model import FindModel
+from .options import MENUS, OPTIONS
 
 # Global status variable, changed by `exit_on_keys` or `FindView`
 EXIT_WITH_SUCCESS = False
@@ -23,33 +23,33 @@ def exit_loop(success):
 class FindView():
     def __init__(self, model):
         help = uw.Text(
-            u"Click menu and edit options.\n"
-            u"Fill 'Execute Command' with the command you want to execute.\n"
-            u"Fill 'Path' with the path you want to run with.\n"
-            u"Press q or Q or Ctrl+d to quit.\n"
-            u"Press reset to reset command with options/exec/path\n"
-            u"Press Enter in input box or click OK to run the command\n\n"
+            "Click menu and edit options.\n"
+            "Fill 'Execute Command' with the command you want to execute.\n"
+            "Fill 'Path' with the path you want to run with.\n"
+            "Press q or Q or Ctrl+d to quit.\n"
+            "Press reset to reset command with options/exec/path\n"
+            "Press Enter in input box or click OK to run the command\n\n"
         )
 
         self.menu = uw.Padding(self.create_menubar(MENUS))
 
         self.options_panel = uw.Padding(self.create_options(MENUS[0]))
 
-        self.actions_input = uw.Edit(u"Execute Command:")
-        self.path_input = uw.Edit(u"Path:")
+        self.actions_input = uw.Edit("Execute Command:")
+        self.path_input = uw.Edit("Path:")
         uw.connect_signal(self.actions_input, 'change', self.actions_changed)
         uw.connect_signal(self.path_input, 'change', self.path_changed)
 
-        self.command_input = uw.Edit(u"Final Command: ")
+        self.command_input = uw.Edit("Final Command: ")
         self.command_input.set_edit_text('find')
         uw.connect_signal(self.command_input, 'change', self.command_changed)
         # click it to run the command
-        ok_button = uw.Button(u"OK")
+        ok_button = uw.Button("OK")
         uw.connect_signal(ok_button, 'click', self.ok_clicked)
         self.ok_button = uw.AttrMap(ok_button,
                                           None, focus_map='reversed')
         # click it to reset output command
-        reset_button = uw.Button(u"Reset")
+        reset_button = uw.Button("Reset")
         uw.connect_signal(reset_button, 'click', self.reset_clicked)
         self.reset_button = uw.AttrMap(reset_button,
                                           None, focus_map='reversed')
@@ -74,10 +74,10 @@ class FindView():
         uw.MainLoop(self.frame, palette=[('reversed', 'standout', '')],
                     unhandled_input=exit_on_keys).run()
 
-    def create_menubar(self, options):
+    def create_menubar(self, menus):
         body = []
-        for opt in options:
-            button = uw.Button(opt)
+        for menu in menus:
+            button = uw.Button(menu)
             uw.connect_signal(button, 'click', self.menu_chosen)
             body.append(uw.AttrMap(button, None, focus_map='reversed'))
         # put all menus vertically, male clicking on them easier

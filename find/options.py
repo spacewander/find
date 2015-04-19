@@ -15,4 +15,4 @@ OPTIONS = {
                  'ls', 'ok', 'okdir', 'print', 'print0', 'printf', 'prune']
 }
 
-MENUS = ['Options', 'Name', 'Perm', 'Size', 'Time', 'Type', 'Others', 'Actions']
+MENUS = [k for k in OPTIONS]

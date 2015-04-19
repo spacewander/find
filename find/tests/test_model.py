@@ -10,18 +10,18 @@ class ModelTest(unittest.TestCase):
         self.model.exec_cmd = 'du -h'
         self.model.path = 'path'
         self.model.reset_cmd()
-        self.assertEqual(self.model.cmd, u"find path -exec du -h {} ;")
+        self.assertEqual(self.model.cmd, "find path -exec du -h {} ;")
         self.model.exec_cmd = ''
         self.model.reset_cmd()
-        self.assertEqual(self.model.cmd, u"find path")
+        self.assertEqual(self.model.cmd, "find path")
 
     def test_update_actions(self):
         self.model.update_actions('du -h')
-        self.assertEqual(self.model.cmd, u"find  -exec du -h {} ;")
+        self.assertEqual(self.model.cmd, "find  -exec du -h {} ;")
 
     def test_update_path(self):
         self.model.update_path('path')
-        self.assertEqual(self.model.cmd, u"find path")
+        self.assertEqual(self.model.cmd, "find path")
 
     def test_update_command(self):
         cmd = 'some cmd'
