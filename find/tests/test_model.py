@@ -3,6 +3,9 @@ import unittest
 from find.model import FindModel
 
 class ModelTest(unittest.TestCase):
+    def cmd(self):
+        return self.model.cmd
+
     def setUp(self):
         self.model = FindModel()
 
@@ -10,20 +13,35 @@ class ModelTest(unittest.TestCase):
         self.model.exec_cmd = 'du -h'
         self.model.path = 'path'
         self.model.reset_cmd()
-        self.assertEqual(self.model.cmd, "find path -exec du -h {} ;")
+        self.assertEqual(self.cmd(), "find path  -exec du -h {} ;")
         self.model.exec_cmd = ''
         self.model.reset_cmd()
-        self.assertEqual(self.model.cmd, "find path")
+        self.assertEqual(self.cmd(), "find path ")
+
+    def test_reset_cmd_option_changed(self):
+        self.model.option_data['some'] = 'true'
+        self.model.reset_cmd(option_changed=True)
+        self.assertEqual(self.cmd(), "find  -some true")
+        self.model.option_data['some'] = 'false'
+        self.model.reset_cmd()
+        self.assertEqual(self.cmd(), "find  -some true")
 
     def test_update_actions(self):
         self.model.update_actions('du -h')
-        self.assertEqual(self.model.cmd, "find  -exec du -h {} ;")
+        self.assertEqual(self.cmd(), "find   -exec du -h {} ;")
 
     def test_update_path(self):
         self.model.update_path('path')
-        self.assertEqual(self.model.cmd, "find path")
+        self.assertEqual(self.cmd(), "find path ")
 
     def test_update_command(self):
         cmd = 'some cmd'
         self.model.update_command(cmd)
-        self.assertEqual(self.model.cmd, cmd)
+        self.assertEqual(self.cmd(), cmd)
+
+    def test_update_options(self):
+        self.model.update_options('some', 'true')
+        self.assertEqual(self.model.option_data['some'], 'true')
+        self.model.update_options('some', remove=True)
+        self.assertNotIn('some', self.model.option_data)
+

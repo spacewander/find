@@ -92,10 +92,10 @@ OPTIONS = {
         })
     ],
     'Others' : [
-        Option('false', CHECKBOX_OPTION, ''),
         Option('inum', INT_INPUT_OPTION, ''),
         Option('links', INT_INPUT_OPTION, ''),
-        Option('true', CHECKBOX_OPTION, '')
+        Option('true', CHECKBOX_OPTION, ''),
+        Option('false', CHECKBOX_OPTION, '')
     ],
     'Actions' : [
         Option('delete', CHECKBOX_OPTION, ''),
@@ -117,9 +117,4 @@ OPTIONS = {
 }
 
 MENUS = [k for k in OPTIONS]
-
-OPTION_DATA = {}
-for category in [[opt.name for opt in OPTIONS[k]] for k in OPTIONS]:
-    for opt in category:
-        OPTION_DATA[opt] = ''
 

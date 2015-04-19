@@ -1,13 +1,15 @@
-from .options import OPTION_DATA
-
 class FindModel(object):
     def __init__(self):
         self.cmd = 'find '
         self.exec_cmd = ''
         self.path = ''
-        self.option_data = OPTION_DATA
+        self.option_data = {}
+        self.options_str = ""
 
-    def reset_cmd(self):
+    def reset_cmd(self, option_changed=False):
+        if option_changed:
+            opt_str = ["-%s %s" % (opt, self.option_data[opt]) for opt in self.option_data]
+            self.options_str =  "".join(opt_str)
         self.cmd = self.__generate_cmd()
 
     def update_actions(self, new_actions):
@@ -16,6 +18,13 @@ class FindModel(object):
 
     def update_command(self, new_command):
         self.cmd = new_command
+
+    def update_options(self, opt, text='', remove=False):
+        if remove:
+            self.option_data.pop(opt, None)
+        else:
+            self.option_data[opt] = text
+        self.reset_cmd(option_changed=True)
 
     def update_path(self, new_path):
         self.path = new_path
@@ -27,5 +36,6 @@ class FindModel(object):
             # Use '{} ;' instead of '{} \;' or '{} +'.
             # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
             # and '{} +' is used less frequently.
-            return "find %s -exec %s {} ;" % (self.path, self.exec_cmd)
-        return "find %s" % (self.path)
+            return "find %s %s -exec %s {} ;" % (self.path, self.options_str,
+                                                 self.exec_cmd)
+        return "find %s %s" % (self.path, self.options_str)
