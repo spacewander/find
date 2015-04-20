@@ -83,8 +83,8 @@ OPTIONS = {
         Option('used', INT_INPUT_OPTION, '')
     ],
     'Type' : [
-        Option('fstype', TEXT_INPUT_OPTION, ''),
-        Option('type', RADIO_BUTTON_OPTION, '', {
+        Option('fstype', TEXT_INPUT_OPTION, 'test_opt_radio_button_changed_clear2fafafafafafafafaf'),
+        Option('type', RADIO_BUTTON_OPTION, 'aaaaaaaaaaaaafafasfasffffffffffffffffffffffffffffffff', {
             'type' : ['b', 'c', 'd', 'p', 'f', 'l', 's', 'D']
         }),
         Option('xtype', RADIO_BUTTON_OPTION, '', {

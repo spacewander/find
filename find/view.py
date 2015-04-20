@@ -23,8 +23,20 @@ def exit_loop(success):
 
 class FindView():
     def __init__(self, model):
+        """
+        The UI of FindView like this:
+
+            menus-----------help---------
+            options----------------------
+            options----------------------
+            notice_board-----------------
+            exec_cmd_input---------------
+            path_input-------------------
+            cmd_input----------ok--reset-
+
+        """
         help = uw.Text(
-            "Click menu and edit options.\n"
+            "\nClick menu and edit options.\n"
             "Fill 'Execute Command' with the command you want to execute.\n"
             "Fill 'Path' with the path you want to run with.\n"
             "Press q or Q or Ctrl+d to quit.\n"
@@ -36,6 +48,8 @@ class FindView():
 
         self.__options_panels = {}
         self.options_panel = uw.Padding(self.create_options(MENUS[0]))
+
+        self.notice_board = uw.Padding(self.create_notice_board())
 
         self.actions_input = uw.Edit("Execute Command:")
         self.path_input = uw.Edit("Path:")
@@ -56,16 +70,19 @@ class FindView():
         self.reset_button = uw.AttrMap(reset_button,
                                           None, focus_map='reversed')
 
-        self.frame = uw.Frame(header=help,
-                              body=uw.Pile(
-                                    [('weight', 0.6, self.menu),
-                                     self.options_panel,
-                                     ('pack', self.actions_input),
-                                     ('pack', self.path_input)]),
-                              footer=uw.Columns([
-                                  self.command_input,
-                                  ('weight', 0.1, self.ok_button),
-                                  ('weight', 0.1, self.reset_button)]))
+        self.frame = uw.Frame(
+            body=uw.Pile([
+                ('weight', 0.6, uw.Columns([
+                    self.menu, uw.Filler(help, valign='top')
+                ], dividechars=20)),
+                self.options_panel,
+                self.notice_board,
+                ('pack', self.actions_input),
+                ('pack', self.path_input)]),
+            footer=uw.Columns([
+                self.command_input,
+                ('weight', 0.1, self.ok_button),
+                ('weight', 0.1, self.reset_button)]))
         self.bind_model(model)
 
     def bind_model(self, model):
@@ -86,10 +103,33 @@ class FindView():
         return uw.ListBox(uw.SimpleFocusListWalker(body))
 
     def create_options(self, choice):
+        """
+        Create options in 'choice' menu.
+        There are five different options:
+            1. CHECKBOX_OPTION: select this option or not, with checkbox
+            2. RADIO_BUTTON_OPTION: select one of the value of an option, with radio buttons
+            3. PATH_INPUT_OPTION: write value in an Edit. The value should be a path
+            4. TEXT_INPUT_OPTION: write value in an Edit. No limit with the value
+            5. INT_INPUT_OPTION: write positive value in an Edit.
+
+        Each option displays with a label(option name), a tool according to its kind,
+        and a description text.
+
+        Except RADIO_BUTTON_OPTION, all options display like this:
+
+            label   tool(Edit/CheckBox)     description
+
+        RADIO_BUTTON_OPTION displays like this:
+
+            label   placeholder...          description
+            RadioButton group
+
+        """
         if choice not in self.__options_panels:
             body = []
             for opt in OPTIONS[choice]:
-                text = uw.Text(opt.name)
+                label = uw.Text(opt.name)
+                description = uw.Text(opt.description)
 
                 if opt.type is CHECKBOX_OPTION:
                     tool = uw.CheckBox('',
@@ -110,19 +150,19 @@ class FindView():
                     tool = uw.Columns(bgroup)
 
                 elif opt.type is PATH_INPUT_OPTION:
-                    tool = uw.Edit()
+                    tool = uw.Edit('> ')
                     uw.connect_signal(tool, 'change',
                                       self.opt_path_input_changed,
                                       user_args=[opt.name])
 
                 elif opt.type is TEXT_INPUT_OPTION:
-                    tool = uw.Edit()
+                    tool = uw.Edit('> ')
                     uw.connect_signal(tool, 'change',
                                       self.opt_text_input_changed,
                                       user_args=[opt.name])
 
                 elif opt.type is INT_INPUT_OPTION:
-                    tool = uw.IntEdit()
+                    tool = uw.IntEdit('> ')
                     uw.connect_signal(tool, 'change',
                                       self.opt_int_input_changed,
                                       user_args=[opt.name])
@@ -130,12 +170,30 @@ class FindView():
                     raise ValueError(
                         "Unknown options type got with name %s" % opt.name)
 
-                body.append(
-                    uw.AttrMap(uw.Columns([('weight', 0.45, text), tool]),
-                               None, focus_map='reversed'))
+                if opt.type is RADIO_BUTTON_OPTION:
+                    placeholder = uw.Text('')
+                    col = uw.Columns([
+                        ('weight', 0.2, label),
+                        ('weight', 0.3, placeholder), description
+                    ])
+                    pile = uw.Pile([col, tool])
+                    body.append(uw.AttrMap(pile, None, focus_map='reversed'))
+                else:
+                    col = uw.Columns([
+                        ('weight', 0.2, label),
+                        ('weight', 0.3, tool), description
+                    ])
+                    body.append(uw.AttrMap(col, None, focus_map='reversed'))
+
             self.__options_panels[choice] = uw.ListBox(
-                uw.SimpleFocusListWalker(body))
+                uw.SimpleFocusListWalker(body)
+            )
         return self.__options_panels[choice]
+
+    def create_notice_board(self, content=False):
+        if not content:
+            return uw.Filler(uw.Text(''))
+        return None
 
     # Action handler
     def actions_changed(self, input, text):
@@ -220,3 +278,4 @@ def setup_tui():
         return model.cmd
     else:
         return ''
+
