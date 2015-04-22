@@ -4,7 +4,7 @@ import urwid as uw
 from urwid import ExitMainLoop
 
 from find.model import FindModel
-from find.view import FindView, exit_on_keys
+from find.view import FindView, exit_on_keys, CLR_RADIO_CHOOSE
 
 ExitMainLoopException = ExitMainLoop().__class__
 
@@ -68,7 +68,7 @@ class ViewTest(unittest.TestCase):
         bgroup = []
         rb = uw.RadioButton(bgroup, 'some', 'first True')
         self.view.opt_radio_button_changed(rb, True, {'option_name': 'opt'})
-        clear = uw.RadioButton(bgroup, 'clear', 'first True')
+        clear = uw.RadioButton(bgroup, CLR_RADIO_CHOOSE, 'first True')
         self.view.opt_radio_button_changed(clear, True, {'option_name': 'opt'})
         self.assertEqual(self.model.options_str, "")
         self.assertEqual(self.cmd().rstrip(), "find")
@@ -84,7 +84,7 @@ class ViewTest(unittest.TestCase):
         rb2 = uw.RadioButton(bgroup2, 'some', 'first True')
         self.view.opt_radio_button_changed(rb2, True, {'option_name': 'name'})
 
-        clear = uw.RadioButton(bgroup1, 'clear', 'first True')
+        clear = uw.RadioButton(bgroup1, CLR_RADIO_CHOOSE, 'first True')
         self.view.opt_radio_button_changed(clear, True, {'option_name': 'opt'})
         self.assertEqual(self.model.options_str, "-name some")
 

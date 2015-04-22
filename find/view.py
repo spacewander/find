@@ -4,6 +4,7 @@ from .model import FindModel
 from .options import (MENUS, OPTIONS, CHECKBOX_OPTION, RADIO_BUTTON_OPTION,
                       PATH_INPUT_OPTION, TEXT_INPUT_OPTION, INT_INPUT_OPTION)
 
+CLR_RADIO_CHOOSE = 'clr'
 # Global status variable, changed by `exit_on_keys` or `FindView`
 EXIT_WITH_SUCCESS = False
 
@@ -72,9 +73,11 @@ class FindView():
 
         self.frame = uw.Frame(
             body=uw.Pile([
-                ('weight', 0.6, uw.Columns([
-                    self.menu, uw.Filler(help, valign='top')
-                ], dividechars=20)),
+                ('weight', 0.7, uw.Columns([
+                    ('weight', 0.5, self.menu),
+                    ('weight', 0.2, uw.Filler(uw.Text(''))),
+                    uw.Filler(help, valign='top')
+                ])),
                 self.options_panel,
                 self.notice_board,
                 ('pack', self.actions_input),
@@ -129,7 +132,7 @@ class FindView():
             body = []
             for opt in OPTIONS[choice]:
                 label = uw.Text(opt.name)
-                description = uw.Text(opt.description)
+                description = uw.Text("-- " + opt.description)
 
                 if opt.type is CHECKBOX_OPTION:
                     tool = uw.CheckBox('',
@@ -139,7 +142,7 @@ class FindView():
                 elif opt.type is RADIO_BUTTON_OPTION:
                     bgroup = []
                     # click clear means you don't need this option any more
-                    uw.RadioButton(bgroup, 'clear', 'first True',
+                    uw.RadioButton(bgroup, CLR_RADIO_CHOOSE, 'first True',
                             on_state_change=self.opt_radio_button_changed,
                             user_data={'option_name': opt.name})
                     for type in opt.data['type']:
@@ -172,16 +175,20 @@ class FindView():
 
                 if opt.type is RADIO_BUTTON_OPTION:
                     placeholder = uw.Text('')
-                    col = uw.Columns([
-                        ('weight', 0.2, label),
-                        ('weight', 0.3, placeholder), description
+                    col1 = uw.Columns([
+                        ('weight', 0.3, label),
+                        ('weight', 0.4, placeholder), description
                     ])
-                    pile = uw.Pile([col, tool])
+                    col2 = uw.Columns([
+                        ('weight', 0.4, tool),
+                        ('weight', 0.6, uw.Text(''))
+                    ])
+                    pile = uw.Pile([col1, col2])
                     body.append(uw.AttrMap(pile, None, focus_map='reversed'))
                 else:
                     col = uw.Columns([
-                        ('weight', 0.2, label),
-                        ('weight', 0.3, tool), description
+                        ('weight', 0.3, label),
+                        ('weight', 0.4, tool), description
                     ])
                     body.append(uw.AttrMap(col, None, focus_map='reversed'))
 
@@ -221,7 +228,7 @@ class FindView():
         # one for True -> False, the other for False -> True,
         # just need to handle the second one.
         if value is True:
-            if rb.label is 'clear':
+            if rb.label is CLR_RADIO_CHOOSE:
                 rb.set_state(False, do_callback=False)
                 self.model.update_options(user_data['option_name'], remove=True)
             else:
