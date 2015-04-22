@@ -1,3 +1,5 @@
+import os
+
 import urwid as uw
 
 from .model import FindModel
@@ -8,13 +10,52 @@ CLR_RADIO_CHOOSE = 'clr'
 # Global status variable, changed by `exit_on_keys` or `FindView`
 EXIT_WITH_SUCCESS = False
 
+# short keys
+JUMP_TO_MENUS = 'ctrl n' # want to use ctrl+m, but it is equal to enter in terminal
+JUMP_TO_OPTIONS = 'ctrl o'
+JUMP_TO_COMMAND = 'ctrl e'
+
+def bind_exit_key():
+    EXIT_KEY = os.getenv('EXIT_KEY', ('q', 'Q', 'ctrl d'))
+    if isinstance(EXIT_KEY, str):
+        EXIT_KEY = (EXIT_KEY, )
+    return EXIT_KEY
+
+def bind_run_key():
+    RUN_KEY = os.getenv('RUN_KEY', 'ctrl r')
+    return RUN_KEY
+
+EXIT_KEY = bind_exit_key()
+RUN_KEY = bind_run_key()
+
 def exit_on_keys(key):
-    if key in ('q', 'Q', 'ctrl d'):
+    """
+    Handle unhandled key input.
+
+    If key given is q/Q/ctrl+d, exit UI simply;
+    else if key given is ctrl+r, exit and prepare to run the command.
+
+    Assuming you can connect with nearest extraterrestrial intelligent life by
+    pressing ctrl+r in the terminal, You won't reserve it for trivival find(1) probably.
+    Don't worry, You can set environment variables like RUN_KEY and EXIT_KEY to specify your key:
+
+        RUN_KEY='ctrl d' find # will use ctrl+d to run the command
+        EXIT_KEY='enter' find # will use enter to exit the UI(without running command)
+
+    Some notices:
+        1. to use ALT, you should type 'meta'
+        2. to use SHIFT+OtherKey, you should type 'shift otherkey'
+        3. no need to type '+' among each key
+
+        So, to use 'ALT+R', you need to type 'shift meta r'
+    """
+    if key in EXIT_KEY:
         exit_loop(success=False)
-    elif key is 'enter':
+    elif key == RUN_KEY:
         exit_loop(success=True)
 
 def exit_loop(success):
+    """exit UI loop and report success or not"""
     global EXIT_WITH_SUCCESS
     if success:
         EXIT_WITH_SUCCESS = True
@@ -37,15 +78,18 @@ class FindView():
 
         """
         help = uw.Text(
-            "\nClick menu and edit options.\n"
+            "Click menu and edit options.\n"
             "Fill 'Execute Command' with the command you want to execute.\n"
             "Fill 'Path' with the path you want to run with.\n"
+            "Press Ctrl+e to jump to command input\n"
+            "Press Ctrl+n to jump to menus, and Ctrl+o to jump to Options\n"
             "Press q or Q or Ctrl+d to quit.\n"
             "Press reset to reset command with options/exec/path\n"
-            "Press Enter in input box or click OK to run the command\n\n"
+            "Press ctrl+r or click OK to run the command\n"
         )
 
-        self.menu = uw.Padding(self.create_menubar(MENUS))
+        self.menus = self.create_menubar(MENUS)
+        self.current_selected_menu_idx = 0
 
         self.__options_panels = {}
         self.options_panel = uw.Padding(self.create_options(MENUS[0]))
@@ -58,7 +102,7 @@ class FindView():
         uw.connect_signal(self.path_input, 'change', self.path_changed)
 
         self.command_input = uw.Edit("Final Command: ")
-        self.command_input.set_edit_text('find')
+        self.command_input.set_edit_text('find ')
         uw.connect_signal(self.command_input, 'change', self.command_changed)
         # click it to run the command
         ok_button = uw.Button("OK")
@@ -74,33 +118,54 @@ class FindView():
         self.frame = uw.Frame(
             body=uw.Pile([
                 ('weight', 0.7, uw.Columns([
-                    ('weight', 0.5, self.menu),
+                    ('weight', 0.5, self.menus),
                     ('weight', 0.2, uw.Filler(uw.Text(''))),
                     uw.Filler(help, valign='top')
                 ])),
                 self.options_panel,
                 self.notice_board,
                 ('pack', self.actions_input),
-                ('pack', self.path_input)]),
-            footer=uw.Columns([
-                self.command_input,
-                ('weight', 0.1, self.ok_button),
-                ('weight', 0.1, self.reset_button)]))
+                ('pack', self.path_input),
+                ('pack', uw.Columns([
+                    self.command_input,
+                    ('weight', 0.1, self.ok_button),
+                    ('weight', 0.1, self.reset_button)])
+                )
+            ])
+        )
+
         self.bind_model(model)
 
     def bind_model(self, model):
         """Bind a model bidirectionally to store and deal with data."""
         self.model = model
 
+    def filter_short_keys(self, keys, raw_keys):
+        """
+        This method will be used as input_filter in MainLoop.
+        We will define short keys here, to catch them before widgets.
+        Return keys so that the widgets can receive the input.
+        """
+        for i, k in enumerate(keys):
+            if k == JUMP_TO_COMMAND:
+                # the shortkey may be used as EXIT_KEY or RUN_KEY, so don't delete it from key
+                self.focus_inputs()
+            elif k == JUMP_TO_MENUS:
+                self.focus_menus()
+            elif k == JUMP_TO_OPTIONS:
+                self.focus_options()
+        return keys
+
     def run(self):
         uw.MainLoop(self.frame, palette=[('reversed', 'standout', '')],
+                    input_filter=self.filter_short_keys,
                     unhandled_input=exit_on_keys).run()
 
     def create_menubar(self, menus):
         body = []
-        for menu in menus:
+        for i, menu in enumerate(menus):
             button = uw.Button(menu)
-            uw.connect_signal(button, 'click', self.menu_chosen)
+            uw.connect_signal(button, 'click', self.menu_chosen, user_args=[i])
             body.append(uw.AttrMap(button, None, focus_map='reversed'))
         # put all menus vertically, male clicking on them easier
         return uw.ListBox(uw.SimpleFocusListWalker(body))
@@ -202,6 +267,35 @@ class FindView():
             return uw.Filler(uw.Text(''))
         return None
 
+    def focus_order(self, area_name):
+        """
+        Look up area name for its position in the view.
+        Return 0 if area name given does not exist.
+        """
+        return {
+            'menus'         : 0,
+            'options_panel' : 1,
+            'notice_board'  : 2,
+            'actions_input' : 3,
+            'path_input'    : 4,
+            'command_input' : 5
+        }.get(area_name, 0)
+
+    def focus_menus(self):
+        """Set focus to current selected menu"""
+        menus_position = self.focus_order('menus')
+        self.frame.body.focus_position = menus_position
+        self.menus.focus_position = self.current_selected_menu_idx
+
+    def focus_options(self):
+        """Set focus to the first option of current selected menu"""
+        self.frame.body.focus_position = self.focus_order('options_panel')
+
+    def focus_inputs(self):
+        """Set focus to command input"""
+        self.frame.body.focus_position = self.focus_order('command_input')
+        self.command_input.set_edit_pos(5) # set cursor behind 'find '
+
     # Action handler
     def actions_changed(self, input, text):
         self.model.update_actions(text)
@@ -210,7 +304,8 @@ class FindView():
     def command_changed(self, input, text):
         self.model.update_command(text)
 
-    def menu_chosen(self, button):
+    def menu_chosen(self, idx, button):
+        self.current_selected_menu_idx = idx
         self.options_panel.original_widget = self.create_options(button.label)
 
     def ok_clicked(self, button):

@@ -4,11 +4,14 @@ import urwid as uw
 from urwid import ExitMainLoop
 
 from find.model import FindModel
-from find.view import FindView, exit_on_keys, CLR_RADIO_CHOOSE
+from find.options import MENUS, OPTIONS
+from find.view import (FindView, exit_on_keys, CLR_RADIO_CHOOSE,
+                       JUMP_TO_MENUS, JUMP_TO_COMMAND, JUMP_TO_OPTIONS)
 
 ExitMainLoopException = ExitMainLoop().__class__
 
 class ViewTest(unittest.TestCase):
+    # helpers
     def cmd(self):
         return self.view.command_input.edit_text
 
@@ -24,7 +27,16 @@ class ViewTest(unittest.TestCase):
         with self.assertRaises(ExitMainLoopException):
             exit_on_keys('ctrl d')
 
-    # unable to test clicking menu yet
+    def test_run_on_keys(self):
+        with self.assertRaises(ExitMainLoopException):
+            exit_on_keys('ctrl r')
+        from find.view import EXIT_WITH_SUCCESS
+        self.assertTrue(EXIT_WITH_SUCCESS)
+
+    # Unable to test specified EXIT_KEY and RUN_KEY.
+    # They have been initialized once view.py is imported
+
+    # Fake user input
     def test_click_ok_button(self):
         with self.assertRaises(ExitMainLoopException):
             self.view.ok_button.keypress((1,1), 'enter')
@@ -54,7 +66,31 @@ class ViewTest(unittest.TestCase):
         self.view.command_input.set_edit_text("find this")
         self.assertEqual(self.model.cmd, "find this")
 
+    def test_jump_to_menus(self):
+        self.view.filter_short_keys([JUMP_TO_MENUS], [])
+        # .contents => ((widget, options), ...)
+        self.assertEqual(self.view.frame.body.focus.contents[0][0],
+                         self.view.menus)
+        self.assertEqual(self.view.menus.focus_position,
+                         self.view.current_selected_menu_idx)
+
+    def test_jump_to_options_panel(self):
+        self.view.filter_short_keys([JUMP_TO_OPTIONS], [])
+        self.assertEqual(self.view.frame.body.focus,
+                         self.view.options_panel)
+
+    def test_jump_to_command_input(self):
+        self.view.filter_short_keys([JUMP_TO_COMMAND], [])
+        self.assertEqual(self.view.frame.body.focus.contents[0][0],
+                         self.view.command_input)
+
     # ACTIONS
+    def test_menu_chosen(self):
+        self.view.menu_chosen(1, uw.Button(MENUS[1]))
+        self.assertEqual(self.view.current_selected_menu_idx, 1)
+        options = self.view.options_panel.original_widget.body
+        self.assertEqual(len(options), len(OPTIONS[MENUS[1]]))
+
     def test_opt_radio_button_changed(self):
         bgroup = []
         rb = uw.RadioButton(bgroup, 'some', 'first True')
@@ -130,3 +166,4 @@ class ViewTest(unittest.TestCase):
 
         self.view.opt_path_input_changed('opt', pi, "")
         self.assertEqual(self.model.options_str, "")
+
