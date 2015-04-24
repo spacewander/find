@@ -6,6 +6,8 @@ from .model import FindModel
 from .options import (MENUS, OPTIONS, CHECKBOX_OPTION, RADIO_BUTTON_OPTION,
                       PATH_INPUT_OPTION, TEXT_INPUT_OPTION, INT_INPUT_OPTION)
 
+LEN_OF_MENUS = len(MENUS)
+
 CLR_RADIO_CHOOSE = 'clr'
 # Global status variable, changed by `exit_on_keys` or `FindView`
 EXIT_WITH_SUCCESS = False
@@ -89,10 +91,12 @@ class FindView():
         )
 
         self.menus = self.create_menubar(MENUS)
-        self.current_selected_menu_idx = 0
+        middle_of_menu = len(MENUS) // 2 - 1
+        self.current_selected_menu_idx = middle_of_menu
+        self.menus.focus_position = middle_of_menu
 
         self.__options_panels = {}
-        self.options_panel = uw.Padding(self.create_options(MENUS[0]))
+        self.options_panel = uw.Padding(self.create_options(MENUS[middle_of_menu]))
 
         self.notice_board = uw.Padding(self.create_notice_board())
 
@@ -115,22 +119,25 @@ class FindView():
         self.reset_button = uw.AttrMap(reset_button,
                                           None, focus_map='reversed')
 
-        self.frame = uw.Frame(
-            body=uw.Pile([
-                ('weight', 0.7, uw.Columns([
+        self.menus_area = uw.Columns([
                     ('weight', 0.5, self.menus),
                     ('weight', 0.2, uw.Filler(uw.Text(''))),
                     uw.Filler(help, valign='top')
-                ])),
+        ])
+        self.command_area = uw.Columns([
+                    self.command_input,
+                    ('weight', 0.1, self.ok_button),
+                    ('weight', 0.1, self.reset_button)
+        ])
+
+        self.frame = uw.Frame(
+            body=uw.Pile([
+                ('weight', 0.7, self.menus_area),
                 self.options_panel,
                 self.notice_board,
                 ('pack', self.actions_input),
                 ('pack', self.path_input),
-                ('pack', uw.Columns([
-                    self.command_input,
-                    ('weight', 0.1, self.ok_button),
-                    ('weight', 0.1, self.reset_button)])
-                )
+                ('pack', self.command_area)
             ])
         )
 
@@ -154,6 +161,22 @@ class FindView():
                 self.focus_menus()
             elif k == JUMP_TO_OPTIONS:
                 self.focus_options()
+            elif k == 'up':
+                if  self.__is_on_options_panel() and self.__is_on_option_n(0):
+                    self.focus_menus()
+                    del keys[i] # no need to up again
+                elif self.__is_on_menus():
+                    idx = self.menus.focus_position - 1
+                    if idx >= 0:
+                        self.current_selected_menu_idx = idx
+                        self.options_panel.original_widget = self.create_options(MENUS[idx])
+            elif k == 'down':
+                if self.__is_on_menus():
+                    idx = self.menus.focus_position + 1
+                    if idx < LEN_OF_MENUS:
+                        self.current_selected_menu_idx = idx
+                        self.options_panel.original_widget = self.create_options(MENUS[idx])
+
         return keys
 
     def run(self):
@@ -163,6 +186,7 @@ class FindView():
 
     def create_menubar(self, menus):
         body = []
+        menus.sort()
         for i, menu in enumerate(menus):
             button = uw.Button(menu)
             uw.connect_signal(button, 'click', self.menu_chosen, user_args=[i])
@@ -195,7 +219,8 @@ class FindView():
         """
         if choice not in self.__options_panels:
             body = []
-            for opt in OPTIONS[choice]:
+            options = sorted(OPTIONS[choice])
+            for opt in options:
                 label = uw.Text(opt.name)
                 description = uw.Text("-- " + opt.description)
 
@@ -296,6 +321,19 @@ class FindView():
         self.frame.body.focus_position = self.focus_order('command_input')
         self.command_input.set_edit_pos(5) # set cursor behind 'find '
 
+    # little helper
+    def __is_on_menus(self):
+        """If focus is on the menus"""
+        return self.frame.body.focus == self.menus_area
+
+    def __is_on_options_panel(self):
+        """If focus is on the options_panel"""
+        return self.frame.body.focus == self.options_panel
+
+    def __is_on_option_n(self, n):
+        """If focus is on nth option(n starts from 0)"""
+        return self.options_panel.original_widget.focus_position == n
+
     # Action handler
     def actions_changed(self, input, text):
         self.model.update_actions(text)
@@ -307,6 +345,7 @@ class FindView():
     def menu_chosen(self, idx, button):
         self.current_selected_menu_idx = idx
         self.options_panel.original_widget = self.create_options(button.label)
+        self.focus_options()
 
     def ok_clicked(self, button):
         exit_loop(success=True)

@@ -12,8 +12,19 @@ ExitMainLoopException = ExitMainLoop().__class__
 
 class ViewTest(unittest.TestCase):
     # helpers
+    def press(self, key):
+        """imitate a key is pressed"""
+        self.view.filter_short_keys([key], [])
+
     def cmd(self):
+        """return the text in command_input"""
         return self.view.command_input.edit_text
+
+    def assert_options_is_from_menu(self, n):
+        """assert the contents of options_panel comes from MENUS[n]"""
+        options = self.view.options_panel.original_widget.body
+        self.assertEqual(len(options), len(OPTIONS[MENUS[n]]),
+                         "options' contents is incorrect")
 
     def setUp(self):
         self.model = FindModel()
@@ -67,7 +78,7 @@ class ViewTest(unittest.TestCase):
         self.assertEqual(self.model.cmd, "find this")
 
     def test_jump_to_menus(self):
-        self.view.filter_short_keys([JUMP_TO_MENUS], [])
+        self.press(JUMP_TO_MENUS)
         # .contents => ((widget, options), ...)
         self.assertEqual(self.view.frame.body.focus.contents[0][0],
                          self.view.menus)
@@ -75,21 +86,56 @@ class ViewTest(unittest.TestCase):
                          self.view.current_selected_menu_idx)
 
     def test_jump_to_options_panel(self):
-        self.view.filter_short_keys([JUMP_TO_OPTIONS], [])
+        self.press(JUMP_TO_OPTIONS)
         self.assertEqual(self.view.frame.body.focus,
                          self.view.options_panel)
 
     def test_jump_to_command_input(self):
-        self.view.filter_short_keys([JUMP_TO_COMMAND], [])
+        self.press(JUMP_TO_COMMAND)
         self.assertEqual(self.view.frame.body.focus.contents[0][0],
                          self.view.command_input)
+
+    def test_focus_middle_menu_at_first(self):
+        middle = len(MENUS) // 2 - 1
+        self.assertEqual(self.view.menus.focus_position, middle)
+        self.assertEqual(self.view.current_selected_menu_idx, middle)
+
+    def test_press_up_on_first_option_jump_to_current_menu(self):
+        # First, we need to focus on the first option of options_panel
+        self.view.frame.body.focus_position = self.view.focus_order('options_panel')
+        self.view.options_panel.original_widget.focus_position = 0
+
+        self.press('up')
+        self.assertEqual(self.view.frame.body.focus, self.view.menus_area)
+        self.assertEqual(self.view.menus.focus_position,
+                         self.view.current_selected_menu_idx)
+
+    def test_press_up_on_menu_change_options(self):
+        self.view.menus.focus_position = 1
+        self.press('up')
+        self.assertEqual(self.view.current_selected_menu_idx, 0)
+        self.assert_options_is_from_menu(0)
+
+        # should not change if there will be out of index
+        self.press('up')
+        self.assertEqual(self.view.current_selected_menu_idx, 0)
+
+    def test_press_down_on_menu_change_options(self):
+        the_last = len(MENUS) - 1
+        self.view.menus.focus_position = the_last - 1
+        self.press('down')
+        self.assertEqual(self.view.current_selected_menu_idx, the_last)
+        self.assert_options_is_from_menu(the_last)
+
+        # should not change if there will be out of index
+        self.press('down')
+        self.assertEqual(self.view.current_selected_menu_idx, the_last)
 
     # ACTIONS
     def test_menu_chosen(self):
         self.view.menu_chosen(1, uw.Button(MENUS[1]))
         self.assertEqual(self.view.current_selected_menu_idx, 1)
-        options = self.view.options_panel.original_widget.body
-        self.assertEqual(len(options), len(OPTIONS[MENUS[1]]))
+        self.assert_options_is_from_menu(1)
 
     def test_opt_radio_button_changed(self):
         bgroup = []
