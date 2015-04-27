@@ -24,7 +24,9 @@ def bind_exit_key():
     return EXIT_KEY
 
 def bind_run_key():
-    RUN_KEY = os.getenv('RUN_KEY', 'ctrl r')
+    RUN_KEY = os.getenv('RUN_KEY', ('ctrl r', 'enter'))
+    if isinstance(RUN_KEY, str):
+        RUN_KEY = (RUN_KEY, )
     return RUN_KEY
 
 EXIT_KEY = bind_exit_key()
@@ -53,7 +55,7 @@ def exit_on_keys(key):
     """
     if key in EXIT_KEY:
         exit_loop(success=False)
-    elif key == RUN_KEY:
+    elif key in RUN_KEY:
         exit_loop(success=True)
 
 def exit_loop(success):

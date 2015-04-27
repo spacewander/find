@@ -9,9 +9,14 @@ import sys
 from find.view import setup_tui
 
 def print_find_result(args):
+    """
+    Run find(1) and print the result to stdout.
+    Notice: To make it almost the same as find(1) in shell,
+    we run the command with shell=True, so, don't play with fire!
+    """
     try:
         # WARN: Require python 2.7+
-        print(subprocess.check_output(args).decode('utf8'), end="")
+        print(subprocess.check_output(args, shell=True).decode('utf8'), end="")
     except subprocess.CalledProcessError:
         pass
 
@@ -20,6 +25,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         cmd = setup_tui()
         if cmd != '':
-            print_find_result(cmd.split())
+            print_find_result(cmd)
     else:
-        print_find_result(['find'] + sys.argv[1:])
+        print_find_result(" ".join(['find'] + sys.argv[1:]))
