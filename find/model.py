@@ -1,3 +1,7 @@
+import os
+
+from .options import  OPTION_NAMES
+
 class FindModel(object):
     def __init__(self):
         self.cmd = 'find '
@@ -39,3 +43,22 @@ class FindModel(object):
             return "find %s %s -exec %s {} ;" % (self.path, self.options_str,
                                                  self.exec_cmd)
         return "find %s %s" % (self.path, self.options_str)
+
+    def complete_any(self, input):
+        """If given input starts with '-', complete with options, else with path"""
+        if input.startswith('-'):
+            return self.complete_options(input[1:])
+        else:
+            return self.complete_path(input)
+
+    def complete_path(self, input):
+        source = os.listdir('.')
+        return self.complete(input, source)
+
+    def complete_options(self, input):
+        source = OPTION_NAMES
+        return self.complete(input, source)
+
+    def complete(self, input, source):
+        return [candidate for candidate in source if candidate.startswith(input)]
+

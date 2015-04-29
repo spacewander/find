@@ -183,6 +183,10 @@ else:
 
 for k in OPTIONS:
     OPTIONS[k] += PLATFORM_SPECIFIC_OPTIONS.get(k, [])
+    OPTIONS[k].sort()
 
-MENUS = [k for k in OPTIONS]
+MENUS = sorted([k for k in OPTIONS])
+OPTION_NAMES = []
+for k in OPTIONS:
+    OPTION_NAMES.extend([opt.name for opt in OPTIONS[k]])
 

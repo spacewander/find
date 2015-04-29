@@ -60,3 +60,16 @@ class ModelTest(unittest.TestCase):
         self.model.update_options('any', 'false')
         self.assertEqual(self.model.option_data['any'], 'false')
 
+    def test_complete_any(self):
+        self.assertEqual(self.model.complete_any('-a'),
+                         self.model.complete_options('a'))
+        self.assertEqual(self.model.complete_any('.'),
+                         self.model.complete_path('.'))
+
+    def test_complete_path(self):
+        self.assertEqual(self.model.complete_path('.g'),
+                         ['.git', '.gitignore'])
+    def test_complete_options(self):
+        self.assertEqual(self.model.complete_options('a'),
+                         ['amin', 'anewer', 'atime'])
+

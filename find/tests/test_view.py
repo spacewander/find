@@ -6,15 +6,26 @@ from urwid import ExitMainLoop
 from find.model import FindModel
 from find.options import MENUS, OPTIONS
 from find.view import (FindView, exit_on_keys, CLR_RADIO_CHOOSE,
-                       JUMP_TO_MENUS, JUMP_TO_COMMAND, JUMP_TO_OPTIONS)
+                       JUMP_TO_MENUS, JUMP_TO_COMMAND, JUMP_TO_OPTIONS,
+                       TRIGGER_COMPLETITION)
 
 ExitMainLoopException = ExitMainLoop().__class__
 
 class ViewTest(unittest.TestCase):
     # helpers
+    def get_option(self, n):
+        """get the tool component of option n"""
+        opts = self.view.options_panel.original_widget.contents()
+        return opts[n][0].original_widget.contents[1][0]
+
+    def choose_menu(self, n):
+        """choose the Nth menu, start from zero"""
+        self.view.menu_chosen(n, uw.Button(MENUS[n]))
+
     def press(self, key):
         """imitate a key is pressed"""
         self.view.filter_short_keys([key], [])
+        return self
 
     def cmd(self):
         """return the text in command_input"""
@@ -131,9 +142,43 @@ class ViewTest(unittest.TestCase):
         self.press('down')
         self.assertEqual(self.view.current_selected_menu_idx, the_last)
 
+    def test_press_completion_trigger_on_path_input(self):
+        self.view.frame.body.focus_position = self.view.focus_order('path_input')
+        self.view.path_input.set_edit_text('.g')
+        self.press(TRIGGER_COMPLETITION)
+        # .git, .gitignore
+        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+
+    def test_press_completion_trigger_on_command_input(self):
+        self.view.frame.body.focus_position = self.view.focus_order('command_input')
+        self.view.command_input.set_edit_text('find fa .g')
+        self.press(TRIGGER_COMPLETITION)
+        # .git, .gitignore
+        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+
+        self.view.command_input.set_edit_text('find afas -a')
+        self.press(TRIGGER_COMPLETITION)
+        # 'amin', 'anewer', 'atime'
+        self.assertEqual(len(self.view.notice_board.original_widget.contents), 3)
+
+    def test_press_completion_trigger_on_path_input_option(self):
+        self.view.frame.body.focus_position = self.view.focus_order('options_panel')
+        # Now the focus is on 'false'
+        self.press(TRIGGER_COMPLETITION)
+        # don't trigger completion on NON-PATH_INPUT_OPTION
+        self.assertEqual(len(self.view.notice_board.original_widget.contents), 0)
+
+        self.choose_menu(1) # Name
+        self.view.frame.body.focus_position = self.view.focus_order('options_panel')
+        # Now the focus is on 'ilname'
+        self.get_option(0).set_edit_text('.g')
+        self.press(TRIGGER_COMPLETITION)
+        # .git, .gitignore
+        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+
     # ACTIONS
     def test_menu_chosen(self):
-        self.view.menu_chosen(1, uw.Button(MENUS[1]))
+        self.choose_menu(1)
         self.assertEqual(self.view.current_selected_menu_idx, 1)
         self.assert_options_is_from_menu(1)
 

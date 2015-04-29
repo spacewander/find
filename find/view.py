@@ -16,6 +16,7 @@ EXIT_WITH_SUCCESS = False
 JUMP_TO_MENUS = 'ctrl n' # want to use ctrl+m, but it is equal to enter in terminal
 JUMP_TO_OPTIONS = 'ctrl o'
 JUMP_TO_COMMAND = 'ctrl e'
+TRIGGER_COMPLETITION = 'tab'
 
 def bind_exit_key():
     EXIT_KEY = os.getenv('EXIT_KEY', ('q', 'Q', 'ctrl d'))
@@ -155,29 +156,53 @@ class FindView():
         We will define short keys here, to catch them before widgets.
         Return keys so that the widgets can receive the input.
         """
-        for i, k in enumerate(keys):
-            if k == JUMP_TO_COMMAND:
-                # the shortkey may be used as EXIT_KEY or RUN_KEY, so don't delete it from key
-                self.focus_inputs()
-            elif k == JUMP_TO_MENUS:
+        def handle_up(keys, k, i):
+            if  self.__is_on_options_panel() and self.__is_on_option_n(0):
                 self.focus_menus()
-            elif k == JUMP_TO_OPTIONS:
-                self.focus_options()
-            elif k == 'up':
-                if  self.__is_on_options_panel() and self.__is_on_option_n(0):
-                    self.focus_menus()
-                    del keys[i] # no need to up again
-                elif self.__is_on_menus():
-                    idx = self.menus.focus_position - 1
-                    if idx >= 0:
-                        self.current_selected_menu_idx = idx
-                        self.options_panel.original_widget = self.create_options(MENUS[idx])
-            elif k == 'down':
-                if self.__is_on_menus():
-                    idx = self.menus.focus_position + 1
-                    if idx < LEN_OF_MENUS:
-                        self.current_selected_menu_idx = idx
-                        self.options_panel.original_widget = self.create_options(MENUS[idx])
+                del keys[i] # no need to up again
+            elif self.__is_on_menus():
+                idx = self.menus.focus_position - 1
+                if idx >= 0:
+                    self.current_selected_menu_idx = idx
+                    self.options_panel.original_widget = self.create_options(
+                        MENUS[idx]
+                    )
+
+        def handle_down(keys, k, i):
+            if self.__is_on_menus():
+                idx = self.menus.focus_position + 1
+                if idx < LEN_OF_MENUS:
+                    self.current_selected_menu_idx = idx
+                    self.options_panel.original_widget = self.create_options(
+                        MENUS[idx]
+                    )
+
+        def handle_trigger_completition_action(keys, k, i):
+            if self.__is_on_options_panel():
+                opt = self.options_panel.original_widget.focus.original_widget.contents[1][0]
+                pos = self.options_panel.original_widget.focus_position
+                name = MENUS[self.current_selected_menu_idx]
+                if OPTIONS[name][pos].type == PATH_INPUT_OPTION:
+                    self.complete(opt, self.model.complete_path)
+            elif self.__is_on_command_input():
+                self.complete(self.command_input, self.model.complete_any)
+            elif self.__is_on_path_input():
+                self.complete(self.path_input, self.model.complete_path)
+            del keys[i]
+
+        def handle_remain_keys(*args): # lambda : pass is not allowed in python
+            pass
+
+        keys_handler_dict = {
+            JUMP_TO_COMMAND: lambda *args : self.focus_inputs(),
+            JUMP_TO_MENUS: lambda *args : self.focus_menus(),
+            JUMP_TO_OPTIONS: lambda *args : self.focus_options(),
+            'up': handle_up,
+            'down': handle_down,
+            TRIGGER_COMPLETITION: handle_trigger_completition_action
+        }
+        for i, k in enumerate(keys):
+            keys_handler_dict.get(k, handle_remain_keys)(keys, k, i)
 
         return keys
 
@@ -188,7 +213,6 @@ class FindView():
 
     def create_menubar(self, menus):
         body = []
-        menus.sort()
         for i, menu in enumerate(menus):
             button = uw.Button(menu)
             uw.connect_signal(button, 'click', self.menu_chosen, user_args=[i])
@@ -221,7 +245,7 @@ class FindView():
         """
         if choice not in self.__options_panels:
             body = []
-            options = sorted(OPTIONS[choice])
+            options = OPTIONS[choice]
             for opt in options:
                 label = uw.Text(opt.name)
                 description = uw.Text("-- " + opt.description)
@@ -289,10 +313,11 @@ class FindView():
             )
         return self.__options_panels[choice]
 
-    def create_notice_board(self, content=False):
-        if not content:
-            return uw.Filler(uw.Text(''))
-        return None
+    def create_notice_board(self, contents=[]):
+        board = []
+        for content in contents[:10]:
+            board.append(uw.Filler(uw.Text(content)))
+        return uw.Pile(board)
 
     def focus_order(self, area_name):
         """
@@ -323,6 +348,21 @@ class FindView():
         self.frame.body.focus_position = self.focus_order('command_input')
         self.command_input.set_edit_pos(5) # set cursor behind 'find '
 
+    def complete(self, component_waited_completed, completer):
+        """
+        Implement auto completition.
+        This method is relatived with notice_board displayed results,
+        a component_waited_completed sending text and received completed text,
+        and some methods of FindModel.
+        This method will be triggered by short key, currently is TAB.
+
+        :param component_waited_completed is a component has edit_text attribute
+        """
+        input = component_waited_completed.edit_text.split(' ')[-1]
+        self.component_waited_completed = component_waited_completed
+        results = completer(input)
+        self.notice_board.original_widget = self.create_notice_board(results)
+
     # little helper
     def __is_on_menus(self):
         """If focus is on the menus"""
@@ -335,6 +375,15 @@ class FindView():
     def __is_on_option_n(self, n):
         """If focus is on nth option(n starts from 0)"""
         return self.options_panel.original_widget.focus_position == n
+
+    def __is_on_command_input(self):
+        """If focus is on the command_input"""
+        return self.frame.body.focus == self.command_area and \
+                self.command_area.focus == self.command_input
+
+    def __is_on_path_input(self):
+        """If focus is on the path_input"""
+        return self.frame.body.focus == self.path_input
 
     # Action handler
     def actions_changed(self, input, text):
