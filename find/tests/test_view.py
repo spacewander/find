@@ -161,20 +161,28 @@ class ViewTest(unittest.TestCase):
         # 'amin', 'anewer', 'atime'
         self.assertEqual(len(self.view.notice_board.original_widget.contents), 3)
 
-    def test_press_completion_trigger_on_path_input_option(self):
+    def test_press_completion_trigger_on_invalid_place(self):
         self.view.frame.body.focus_position = self.view.focus_order('options_panel')
         # Now the focus is on 'false'
         self.press(TRIGGER_COMPLETITION)
         # don't trigger completion on NON-PATH_INPUT_OPTION
         self.assertEqual(len(self.view.notice_board.original_widget.contents), 0)
 
+    def test_press_completion_trigger_on_path_input_option(self):
         self.choose_menu(1) # Name
         self.view.frame.body.focus_position = self.view.focus_order('options_panel')
         # Now the focus is on 'ilname'
-        self.get_option(0).set_edit_text('.g')
+        focused = self.get_option(0)
+        focused.set_edit_text('.g')
         self.press(TRIGGER_COMPLETITION)
         # .git, .gitignore
         self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+
+        cwc = self.view.component_waited_completed
+        # change on path_input
+        self.assertEqual(cwc, focused)
+        self.assertEqual(cwc.edit_text, '.git')
+        self.assertEqual(cwc.edit_pos, 4)
 
     # ACTIONS
     def test_menu_chosen(self):

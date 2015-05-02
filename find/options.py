@@ -2,8 +2,8 @@ try:
     import enum  # py >= 3.4
 except ImportError:
     enum = None
-import platform
 
+import platform
 from collections import namedtuple
 
 
@@ -25,7 +25,9 @@ else:
 
 GNU_FIND = False
 BSD_FIND = False
-if platform.system() == 'Linux':
+current_os = platform.system()
+
+if  current_os == 'Linux' or current_os.startswith('CYGWIN'):
     GNU_FIND = True
 else:
     BSD_FIND = True # have not support find(1) on other posix system yet :)
@@ -188,5 +190,5 @@ for k in OPTIONS:
 MENUS = sorted([k for k in OPTIONS])
 OPTION_NAMES = []
 for k in OPTIONS:
-    OPTION_NAMES.extend([opt.name for opt in OPTIONS[k]])
+    OPTION_NAMES.extend(['-' + opt.name for opt in OPTIONS[k]])
 

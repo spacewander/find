@@ -47,7 +47,7 @@ class FindModel(object):
     def complete_any(self, input):
         """If given input starts with '-', complete with options, else with path"""
         if input.startswith('-'):
-            return self.complete_options(input[1:])
+            return self.complete_options(input)
         else:
             return self.complete_path(input)
 
@@ -60,5 +60,10 @@ class FindModel(object):
         return self.complete(input, source)
 
     def complete(self, input, source):
-        return [candidate for candidate in source if candidate.startswith(input)]
+        candidates = [candidate for candidate in source if candidate.startswith(input)]
+        prefix = self.find_common_prefix(input, source)
+        return candidates, prefix
+
+    def find_common_prefix(self, input, source):
+        return input
 

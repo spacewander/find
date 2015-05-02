@@ -1,4 +1,6 @@
 import os
+import platform
+import struct
 
 import urwid as uw
 
@@ -68,6 +70,43 @@ def exit_loop(success):
         EXIT_WITH_SUCCESS = False
     raise uw.ExitMainLoop()
 
+def get_terminal_size():
+    """get width and height of console"""
+    current_os = platform.system()
+    tuple_xy = None
+    if current_os in ['Linux', 'Darwin'] or current_os.startswith('CYGWIN'):
+        def ioctl_GWINSZ(fd):
+            try:
+                import fcntl
+                import termios
+                cr = struct.unpack('hh',
+                                fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+                return cr
+            except:
+                pass
+        cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2) # try 1
+        if not cr:
+            try:
+                fd = os.open(os.ctermid(), os.O_RDONLY) # try 2
+                cr = ioctl_GWINSZ(fd)
+                os.close(fd)
+            except:
+                pass
+        if not cr:
+            try:
+                cr = (os.environ['LINES'], os.environ['COLUMNS']) # try 3
+            except:
+                pass
+        if not cr:
+            tuple_xy = None # accept it
+        else:
+            tuple_xy = (int(cr[1]), int(cr[0]))
+
+    if tuple_xy is None:
+        tuple_xy = (80, 25)      # default value
+    return tuple_xy
+
+
 class FindView():
     def __init__(self, model):
         """
@@ -135,16 +174,18 @@ class FindView():
 
         self.frame = uw.Frame(
             body=uw.Pile([
-                ('weight', 0.7, self.menus_area),
-                self.options_panel,
-                self.notice_board,
+                ('weight', 0.6, self.menus_area),
+                ('weight', 1, self.options_panel),
+                ('weight', 0.7, self.notice_board),
                 ('pack', self.actions_input),
                 ('pack', self.path_input),
                 ('pack', self.command_area)
             ])
         )
 
+        # Non-GUI part
         self.bind_model(model)
+        self.component_waited_completed = None
 
     def bind_model(self, model):
         """Bind a model bidirectionally to store and deal with data."""
@@ -314,9 +355,39 @@ class FindView():
         return self.__options_panels[choice]
 
     def create_notice_board(self, contents=[]):
+        if contents == []:
+            return uw.Pile([])
+
         board = []
-        for content in contents[:10]:
-            board.append(uw.Filler(uw.Text(content)))
+        width, _ = get_terminal_size()
+        # len(str) + padding
+        max_length = reduce(lambda x, y: max(x, len(y)), contents, 0) + 10
+        # the result should be 1/2/4 according to terminal width
+        content_per_row = width // max_length
+        if content_per_row <= 1:
+            content_per_row = 1
+        elif content_per_row <= 3:
+            content_per_row = 2
+        else:
+            content_per_row = 4
+
+        uw.Button.button_left = uw.Text('')
+        uw.Button.button_right = uw.Text('')
+        line_num = 11
+        if line_num >= len(contents):
+            for content in contents:
+                btn = uw.Button(content)
+                board.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
+        else:
+            rows = min(len(contents) // content_per_row, line_num)
+            for i in range(rows):
+                row = []
+                for j in range(content_per_row):
+                    content = contents[i*content_per_row+j]
+                    btn = uw.Button(content)
+                    row.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
+                board.append(uw.Columns(row, dividechars=5))
+        # Should I reset the button_left/right after create the new notice_board?
         return uw.Pile(board)
 
     def focus_order(self, area_name):
@@ -356,12 +427,31 @@ class FindView():
         and some methods of FindModel.
         This method will be triggered by short key, currently is TAB.
 
-        :param component_waited_completed is a component has edit_text attribute
+        User case:
+            1. user press TAB(completion trigger)
+            2. figure out common prefix and candidates
+            3. use candidates to fill the notice_board
+                3.1 fill it with Button(not pretty, but useful)
+                3.2 one or two or four items each row,
+                    according to the max length of candidates and the width of terminal
+            4. complete component with prefix, and move the cursor to end
+
+        :param
+            component_waited_completed is a component has 'edit_text' and 'set_edit_text' attributes
+        :param
+            completer is a function accepted text, return candidate list and common prefix
         """
-        input = component_waited_completed.edit_text.split(' ')[-1]
+        text_pieces = component_waited_completed.edit_text.split(' ')
+        input = text_pieces[-1]
         self.component_waited_completed = component_waited_completed
-        results = completer(input)
-        self.notice_board.original_widget = self.create_notice_board(results)
+
+        candidates, prefix = completer(input)
+        self.notice_board.original_widget = self.create_notice_board(candidates)
+        text_pieces[-1] = prefix
+
+        result = " ".join(text_pieces)
+        self.component_waited_completed.set_edit_text(result)
+        self.component_waited_completed.set_edit_pos(len(result))
 
     # little helper
     def __is_on_menus(self):

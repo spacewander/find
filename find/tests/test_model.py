@@ -68,8 +68,9 @@ class ModelTest(unittest.TestCase):
 
     def test_complete_path(self):
         self.assertEqual(self.model.complete_path('.g'),
-                         ['.git', '.gitignore'])
+                         (['.git', '.gitignore'], '.git'))
+
     def test_complete_options(self):
         self.assertEqual(self.model.complete_options('a'),
-                         ['amin', 'anewer', 'atime'])
+                         (['amin', 'anewer', 'atime'], 'a'))
 
