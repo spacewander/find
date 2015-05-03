@@ -188,7 +188,10 @@ for k in OPTIONS:
     OPTIONS[k].sort()
 
 MENUS = sorted([k for k in OPTIONS])
+
 OPTION_NAMES = []
+OPTION_DATA = {}
 for k in OPTIONS:
     OPTION_NAMES.extend(['-' + opt.name for opt in OPTIONS[k]])
-
+    for opt in OPTIONS[k]:
+        OPTION_DATA['-'+opt.name] = "-%s -- %s" % (opt.name, opt.description)

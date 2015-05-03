@@ -358,43 +358,56 @@ class FindView():
     def create_notice_board(self, contents=[]):
         # contents: [(text, data), ...]
         if len(contents) is 0:
-            return uw.Pile([])
+            return uw.ListBox(uw.SimpleListWalker([]))
 
         board = []
-        width, _ = get_terminal_size()
-        # len(text) + padding
-        max_length = reduce(lambda x, y: max(x, len(y[0])), contents, 0) + 10
-        # the result should be 1/2/4 according to terminal width
-        content_per_row = width // max_length
-        if content_per_row <= 1:
-            content_per_row = 1
-        elif content_per_row <= 3:
-            content_per_row = 2
-        else:
-            content_per_row = 4
+        line_num = 10
 
         uw.Button.button_left = uw.Text('')
         uw.Button.button_right = uw.Text('')
-        line_num = 11
 
-        if line_num >= len(contents):
-            for content in contents:
-                btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
+        if contents[0][0] != contents[0][1]: # options
+            for content in contents[:line_num]:
+                text = content[0][len(content[1]):]
+                btn = uw.Button(content[1], on_press=self.complete_btn_clicked,
                                 user_data=content[1])
-                board.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
-        else:
-            rows = min(len(contents) // content_per_row, line_num)
-            for i in range(rows):
-                row = []
-                for j in range(content_per_row):
-                    content = contents[i*content_per_row+j]
+                description = uw.Text(text)
+                board.append(uw.AttrMap(uw.Columns([btn,
+                                                    ('weight', 1.5, description)]),
+                                        None, focus_map='reversed'))
+
+        else: # path or others
+            width, _ = get_terminal_size()
+            # len(text) + padding
+            max_length = reduce(lambda x, y: max(x, len(y[0])), contents, 0) + 10
+            # the result should be 1/2/4 according to terminal width
+            content_per_row = width // max_length
+            if content_per_row <= 1:
+                content_per_row = 1
+            elif content_per_row <= 3:
+                content_per_row = 2
+            else:
+                content_per_row = 4
+
+            # unlike zsh, we prefer to put contents vertically
+            if line_num >= len(contents):
+                for content in contents:
                     btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
                                     user_data=content[1])
-                    row.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
-                board.append(uw.Columns(row, dividechars=5))
+                    board.append(uw.AttrMap(uw.Columns([btn]), None, focus_map='reversed'))
+            else:
+                rows = min(len(contents) // content_per_row, line_num)
+                for i in range(rows):
+                    row = []
+                    for j in range(content_per_row):
+                        content = contents[i*content_per_row+j]
+                        btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
+                                        user_data=content[1])
+                        row.append(uw.AttrMap(btn, None, focus_map='reversed'))
+                    board.append(uw.Columns(row, dividechars=5))
 
         # Should I reset the button_left/right after create the new notice_board?
-        return uw.Pile(board)
+        return uw.ListBox(uw.SimpleFocusListWalker(board))
 
     def focus_order(self, area_name):
         """
@@ -455,11 +468,19 @@ class FindView():
         # prefix: string
         candidates, prefix = completer(input)
         self.notice_board.original_widget = self.create_notice_board(candidates)
-        text_pieces[-1] = prefix
+        if prefix == '' or prefix == input:
+            return
+        else:
+            if prefix.endswith(os.path.sep):
+                candidates, prefix = completer(prefix)
+                self.notice_board.original_widget = self.create_notice_board(candidates)
 
-        result = " ".join(text_pieces)
-        self.component_waited_completed.set_edit_text(result)
-        self.component_waited_completed.set_edit_pos(len(result))
+            text_pieces[-1] = prefix
+            result = " ".join(text_pieces)
+            self.component_waited_completed.set_edit_text(result)
+            self.component_waited_completed.set_edit_pos(len(result))
+        # In zsh, it will focus the first candidate. But if we focus the notice_board,
+        # the focus of Edit will lose, which is uncomfortable
 
     # little helper
     def __is_on_menus(self):
@@ -500,7 +521,7 @@ class FindView():
         """Click OK button and exit the terminal UI, then run the find(1)"""
         exit_loop(success=True)
 
-    def complete_btn_clicked(self, text, button):
+    def complete_btn_clicked(self, button, text):
         # make sure component_waited_completed is existed
         old_text = self.component_waited_completed.edit_text
         last_piece_start = old_text.rfind(' ') + 1
@@ -510,6 +531,7 @@ class FindView():
             new_text = text
         self.component_waited_completed.set_edit_text(new_text)
         self.component_waited_completed.set_edit_pos(len(new_text))
+        # FIXME how can we jump back to component_waited_completed?
 
     def opt_checkbox_changed(self, cb, value, user_data):
         if value is True:

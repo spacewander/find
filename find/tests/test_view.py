@@ -13,6 +13,9 @@ ExitMainLoopException = ExitMainLoop().__class__
 
 class ViewTest(unittest.TestCase):
     # helpers
+    def assert_notice_board_have_items(self, n):
+        self.assertEqual(len(self.view.notice_board.original_widget.body), n)
+
     def get_option(self, n):
         """get the tool component of option n"""
         opts = self.view.options_panel.original_widget.contents()
@@ -147,26 +150,26 @@ class ViewTest(unittest.TestCase):
         self.view.path_input.set_edit_text('.g')
         self.press(TRIGGER_COMPLETITION)
         # .git, .gitignore
-        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+        self.assert_notice_board_have_items(2)
 
     def test_press_completion_trigger_on_command_input(self):
         self.view.frame.body.focus_position = self.view.focus_order('command_input')
         self.view.command_input.set_edit_text('find fa .g')
         self.press(TRIGGER_COMPLETITION)
         # .git, .gitignore
-        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+        self.assert_notice_board_have_items(2)
 
         self.view.command_input.set_edit_text('find afas -a')
         self.press(TRIGGER_COMPLETITION)
         # 'amin', 'anewer', 'atime'
-        self.assertEqual(len(self.view.notice_board.original_widget.contents), 3)
+        self.assert_notice_board_have_items(3)
 
     def test_press_completion_trigger_on_invalid_place(self):
         self.view.frame.body.focus_position = self.view.focus_order('options_panel')
         # Now the focus is on 'false'
         self.press(TRIGGER_COMPLETITION)
         # don't trigger completion on NON-PATH_INPUT_OPTION
-        self.assertEqual(len(self.view.notice_board.original_widget.contents), 0)
+        self.assert_notice_board_have_items(0)
 
     def test_press_completion_trigger_on_path_input_option(self):
         self.choose_menu(1) # Name
@@ -176,7 +179,7 @@ class ViewTest(unittest.TestCase):
         focused.set_edit_text('.g')
         self.press(TRIGGER_COMPLETITION)
         # .git, .gitignore
-        self.assertEqual(len(self.view.notice_board.original_widget.contents), 2)
+        self.assert_notice_board_have_items(2)
 
         cwc = self.view.component_waited_completed
         # change on path_input
@@ -192,11 +195,11 @@ class ViewTest(unittest.TestCase):
         ed2.set_edit_text('b')
         btn = uw.Button('')
         self.view.component_waited_completed = ed
-        self.view.complete_btn_clicked('blind', btn)
+        self.view.complete_btn_clicked(btn, 'blind')
         self.assertEqual(ed.edit_text, 'a blind')
 
         self.view.component_waited_completed = ed2
-        self.view.complete_btn_clicked('blind', btn)
+        self.view.complete_btn_clicked(btn, 'blind')
         self.assertEqual(ed2.edit_text, 'blind')
 
     def test_menu_chosen(self):

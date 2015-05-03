@@ -1,7 +1,7 @@
 import os
 from functools import reduce
 
-from .options import  OPTION_NAMES
+from .options import  OPTION_NAMES, OPTION_DATA
 
 class FindModel(object):
     def __init__(self):
@@ -56,10 +56,19 @@ class FindModel(object):
 
     def complete_path(self, input):
         dirname = os.path.dirname(input)
-        if dirname == '':
-            dirname = '.'
-        input = os.path.basename(input)
-        source = os.listdir(dirname)
+        # dirname is stupid, it just does some string work,
+        # without checking if the dirname is existed
+        try:
+            if dirname == '':
+                dirname = '.'
+                source = [f for f in os.listdir(dirname)]
+            else:
+                source = [os.path.join(dirname, f) for f in os.listdir(dirname)]
+            for i, f in enumerate(source):
+                if os.path.isdir(f):
+                    source[i] += '/'
+        except OSError:
+            source = []
         return self.complete(input, source)
 
     def complete_options(self, input):
@@ -70,7 +79,7 @@ class FindModel(object):
         candidates = [candidate for candidate in source if candidate.startswith(input)]
         prefix = self.find_common_prefix(candidates)
         if is_options:
-            candidates = [(candidate, candidate) \
+            candidates = [(OPTION_DATA[candidate], candidate) \
                           for candidate in source if candidate.startswith(input)]
         else:
             candidates = [(candidate, candidate) \

@@ -81,11 +81,18 @@ class ModelTest(unittest.TestCase):
         dir = 'find/tests'
         if os.path.exists(dir):
             files = os.listdir(dir)
-            files = [f for f in files if f.startswith('t')]
+            files = [os.path.join(dir, f) for f in files if f.startswith('t')]
             candidates, prefix = self.model.complete_path(os.path.join(dir, 't'))
             data = self.get_completition_data(candidates)
             self.assertEqual(data, files)
-            self.assertEqual(prefix, 'test_')
+            self.assertEqual(prefix, 'find/tests/test_')
+
+    def test_complete_path_with_nonexisted_dir(self):
+        dir = '.git/HEAD/'
+        if os.path.exists(dir):
+            candidates, prefix = self.model.complete_path(os.path.join(dir))
+            self.assertEqual(candidates, [])
+            self.assertEqual(prefix, '')
 
     def test_complete_options(self):
         candidates, prefix = self.model.complete_options('-a')
