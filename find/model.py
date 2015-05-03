@@ -1,4 +1,5 @@
 import os
+from functools import reduce
 
 from .options import  OPTION_NAMES
 
@@ -45,25 +46,46 @@ class FindModel(object):
         return "find %s %s" % (self.path, self.options_str)
 
     def complete_any(self, input):
-        """If given input starts with '-', complete with options, else with path"""
+        """
+        If given input starts with '-', complete with options, else with path.
+        """
         if input.startswith('-'):
             return self.complete_options(input)
         else:
             return self.complete_path(input)
 
     def complete_path(self, input):
-        source = os.listdir('.')
+        dirname = os.path.dirname(input)
+        if dirname == '':
+            dirname = '.'
+        input = os.path.basename(input)
+        source = os.listdir(dirname)
         return self.complete(input, source)
 
     def complete_options(self, input):
         source = OPTION_NAMES
-        return self.complete(input, source)
+        return self.complete(input, source, is_options=True)
 
-    def complete(self, input, source):
+    def complete(self, input, source, is_options=False):
         candidates = [candidate for candidate in source if candidate.startswith(input)]
-        prefix = self.find_common_prefix(input, source)
+        prefix = self.find_common_prefix(candidates)
+        if is_options:
+            candidates = [(candidate, candidate) \
+                          for candidate in source if candidate.startswith(input)]
+        else:
+            candidates = [(candidate, candidate) \
+                          for candidate in source if candidate.startswith(input)]
         return candidates, prefix
 
-    def find_common_prefix(self, input, source):
-        return input
+    def find_common_prefix(self, candidates):
+        def common_prefix(prefix, string):
+            i = 0
+            for ch in zip(prefix, string):
+                if ch[0] == ch[1]:
+                    i += 1
+            return prefix[:i]
+
+        if len(candidates) is 0:
+            return ''
+        return reduce(common_prefix, candidates)
 

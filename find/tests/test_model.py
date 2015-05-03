@@ -1,8 +1,13 @@
+import os
 import unittest
 
 from find.model import FindModel
 
 class ModelTest(unittest.TestCase):
+    def get_completition_data(self, candidates):
+        """refine data part from given candidates"""
+        return [candidate[1] for candidate in candidates]
+
     def cmd(self):
         return self.model.cmd
 
@@ -62,15 +67,29 @@ class ModelTest(unittest.TestCase):
 
     def test_complete_any(self):
         self.assertEqual(self.model.complete_any('-a'),
-                         self.model.complete_options('a'))
+                         self.model.complete_options('-a'))
         self.assertEqual(self.model.complete_any('.'),
                          self.model.complete_path('.'))
 
     def test_complete_path(self):
-        self.assertEqual(self.model.complete_path('.g'),
-                         (['.git', '.gitignore'], '.git'))
+        candidates, prefix = self.model.complete_path('.g')
+        data = self.get_completition_data(candidates)
+        self.assertEqual(data, ['.git', '.gitignore'])
+        self.assertEqual(prefix, '.git')
+
+    def test_complete_path_with_dir(self):
+        dir = 'find/tests'
+        if os.path.exists(dir):
+            files = os.listdir(dir)
+            files = [f for f in files if f.startswith('t')]
+            candidates, prefix = self.model.complete_path(os.path.join(dir, 't'))
+            data = self.get_completition_data(candidates)
+            self.assertEqual(data, files)
+            self.assertEqual(prefix, 'test_')
 
     def test_complete_options(self):
-        self.assertEqual(self.model.complete_options('a'),
-                         (['amin', 'anewer', 'atime'], 'a'))
+        candidates, prefix = self.model.complete_options('-a')
+        data = self.get_completition_data(candidates)
+        self.assertEqual(data, ['-amin', '-anewer', '-atime'])
+        self.assertEqual(prefix, '-a')
 

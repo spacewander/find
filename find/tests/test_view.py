@@ -185,6 +185,20 @@ class ViewTest(unittest.TestCase):
         self.assertEqual(cwc.edit_pos, 4)
 
     # ACTIONS
+    def test_complete_btn_clicked(self):
+        ed = uw.Edit('')
+        ed.set_edit_text('a b')
+        ed2 = uw.Edit('')
+        ed2.set_edit_text('b')
+        btn = uw.Button('')
+        self.view.component_waited_completed = ed
+        self.view.complete_btn_clicked('blind', btn)
+        self.assertEqual(ed.edit_text, 'a blind')
+
+        self.view.component_waited_completed = ed2
+        self.view.complete_btn_clicked('blind', btn)
+        self.assertEqual(ed2.edit_text, 'blind')
+
     def test_menu_chosen(self):
         self.choose_menu(1)
         self.assertEqual(self.view.current_selected_menu_idx, 1)

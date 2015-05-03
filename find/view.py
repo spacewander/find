@@ -1,6 +1,7 @@
 import os
 import platform
 import struct
+from functools import reduce
 
 import urwid as uw
 
@@ -355,13 +356,14 @@ class FindView():
         return self.__options_panels[choice]
 
     def create_notice_board(self, contents=[]):
-        if contents == []:
+        # contents: [(text, data), ...]
+        if len(contents) is 0:
             return uw.Pile([])
 
         board = []
         width, _ = get_terminal_size()
-        # len(str) + padding
-        max_length = reduce(lambda x, y: max(x, len(y)), contents, 0) + 10
+        # len(text) + padding
+        max_length = reduce(lambda x, y: max(x, len(y[0])), contents, 0) + 10
         # the result should be 1/2/4 according to terminal width
         content_per_row = width // max_length
         if content_per_row <= 1:
@@ -374,9 +376,11 @@ class FindView():
         uw.Button.button_left = uw.Text('')
         uw.Button.button_right = uw.Text('')
         line_num = 11
+
         if line_num >= len(contents):
             for content in contents:
-                btn = uw.Button(content)
+                btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
+                                user_data=content[1])
                 board.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
         else:
             rows = min(len(contents) // content_per_row, line_num)
@@ -384,9 +388,11 @@ class FindView():
                 row = []
                 for j in range(content_per_row):
                     content = contents[i*content_per_row+j]
-                    btn = uw.Button(content)
+                    btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
+                                    user_data=content[1])
                     row.append(uw.AttrMap(uw.Filler(btn), None, focus_map='reversed'))
                 board.append(uw.Columns(row, dividechars=5))
+
         # Should I reset the button_left/right after create the new notice_board?
         return uw.Pile(board)
 
@@ -445,6 +451,8 @@ class FindView():
         input = text_pieces[-1]
         self.component_waited_completed = component_waited_completed
 
+        # candidates: [(text, data), ...]
+        # prefix: string
         candidates, prefix = completer(input)
         self.notice_board.original_widget = self.create_notice_board(candidates)
         text_pieces[-1] = prefix
@@ -489,7 +497,19 @@ class FindView():
         self.focus_options()
 
     def ok_clicked(self, button):
+        """Click OK button and exit the terminal UI, then run the find(1)"""
         exit_loop(success=True)
+
+    def complete_btn_clicked(self, text, button):
+        # make sure component_waited_completed is existed
+        old_text = self.component_waited_completed.edit_text
+        last_piece_start = old_text.rfind(' ') + 1
+        if last_piece_start != 0:
+            new_text = old_text[:last_piece_start] + text
+        else:
+            new_text = text
+        self.component_waited_completed.set_edit_text(new_text)
+        self.component_waited_completed.set_edit_pos(len(new_text))
 
     def opt_checkbox_changed(self, cb, value, user_data):
         if value is True:
