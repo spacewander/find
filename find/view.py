@@ -15,26 +15,34 @@ CLR_RADIO_CHOOSE = 'clr'
 # Global status variable, changed by `exit_on_keys` or `FindView`
 EXIT_WITH_SUCCESS = False
 
+def bind_key(name, key):
+    """
+    Bind key to specific key name, without checking key conflict.
+    :param name is the name of bined key, like 'EXIT_KEY'
+    :param key is a string of key, like 'ctrl n'
+    """
+    return os.getenv(name, key)
+
 # short keys
-JUMP_TO_MENUS = 'ctrl n' # want to use ctrl+m, but it is equal to enter in terminal
-JUMP_TO_OPTIONS = 'ctrl o'
-JUMP_TO_COMMAND = 'ctrl e'
-TRIGGER_COMPLETITION = 'tab'
+JUMP_TO_MENUS = bind_key('JUMP_TO_MENUS', 'ctrl n')# want to use ctrl+m, but it is equal to enter in terminal
+JUMP_TO_OPTIONS = bind_key('JUMP_TO_OPTIONS', 'ctrl o')
+JUMP_TO_COMMAND = bind_key('JUMP_TO_COMMAND', 'ctrl e')
+TRIGGER_COMPLETITION = bind_key('TRIGGER_COMPLETITION', 'tab')
 
-def bind_exit_key():
-    EXIT_KEY = os.getenv('EXIT_KEY', ('q', 'Q', 'ctrl d'))
-    if isinstance(EXIT_KEY, str):
-        EXIT_KEY = (EXIT_KEY, )
-    return EXIT_KEY
+def bind_keys(name, keys):
+    """
+    Bind keys to specific key name, without checking key conflict.
+    :param name is the name of bined key, like 'EXIT_KEY'
+    :param keys is a tuple of keys, like ('q', 'Q', 'ctrl d')
+    """
+    type = os.getenv(name, keys)
+    if isinstance(type, str):
+        type = (type, )
+    return type
 
-def bind_run_key():
-    RUN_KEY = os.getenv('RUN_KEY', ('ctrl r', 'enter'))
-    if isinstance(RUN_KEY, str):
-        RUN_KEY = (RUN_KEY, )
-    return RUN_KEY
 
-EXIT_KEY = bind_exit_key()
-RUN_KEY = bind_run_key()
+EXIT_KEY = bind_keys('EXIT_KEY', ('q', 'Q', 'ctrl d'))
+RUN_KEY = bind_keys('RUN_KEY', ('ctrl r', 'enter'))
 
 def exit_on_keys(key):
     """

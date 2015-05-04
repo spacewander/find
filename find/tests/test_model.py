@@ -74,7 +74,7 @@ class ModelTest(unittest.TestCase):
     def test_complete_path(self):
         candidates, prefix = self.model.complete_path('.g')
         data = self.get_completition_data(candidates)
-        self.assertEqual(data, ['.git', '.gitignore'])
+        self.assertEqual(data, ['.git/', '.gitignore'])
         self.assertEqual(prefix, '.git')
 
     def test_complete_path_with_dir(self):
