@@ -6,10 +6,10 @@ from find.model import FindModel
 class ModelTest(unittest.TestCase):
     def get_completition_data(self, candidates):
         """refine data part from given candidates"""
-        return [candidate[1] for candidate in candidates]
+        return sorted([candidate[1] for candidate in candidates])
 
     def cmd(self):
-        return self.model.cmd
+        return self.model.cmd.toCmd()
 
     def setUp(self):
         self.model = FindModel()
@@ -21,7 +21,7 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(self.cmd(), "find path  -exec du -h {} ;")
         self.model.exec_cmd = ''
         self.model.reset_cmd()
-        self.assertEqual(self.cmd(), "find path ")
+        self.assertEqual(self.cmd(), "find path")
 
     def test_reset_cmd_option_changed(self):
         self.model.option_data['some'] = 'true'
@@ -47,12 +47,12 @@ class ModelTest(unittest.TestCase):
 
     def test_update_path(self):
         self.model.update_path('path')
-        self.assertEqual(self.cmd(), "find path ")
+        self.assertEqual(self.cmd(), "find path")
 
     def test_update_command(self):
         cmd = 'some cmd'
         self.model.update_command(cmd)
-        self.assertEqual(self.cmd(), cmd)
+        self.assertEqual(self.cmd(), "find")
 
     def test_update_options(self):
         self.model.update_options('some', 'true')
@@ -84,7 +84,7 @@ class ModelTest(unittest.TestCase):
             files = [os.path.join(dir, f) for f in files if f.startswith('t')]
             candidates, prefix = self.model.complete_path(os.path.join(dir, 't'))
             data = self.get_completition_data(candidates)
-            self.assertEqual(data, files)
+            self.assertEqual(data, sorted(files))
             self.assertEqual(prefix, 'find/tests/test_')
 
     def test_complete_path_with_nonexisted_dir(self):
@@ -95,8 +95,8 @@ class ModelTest(unittest.TestCase):
             self.assertEqual(prefix, '')
 
     def test_complete_options(self):
-        candidates, prefix = self.model.complete_options('-a')
+        candidates, prefix = self.model.complete_options('-t')
         data = self.get_completition_data(candidates)
-        self.assertEqual(data, ['-amin', '-anewer', '-atime'])
-        self.assertEqual(prefix, '-a')
+        self.assertEqual(data, ['-true', '-type'])
+        self.assertEqual(prefix, '-t')
 

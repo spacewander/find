@@ -8,6 +8,7 @@ import urwid as uw
 from .model import FindModel
 from .options import (MENUS, OPTIONS, CHECKBOX_OPTION, RADIO_BUTTON_OPTION,
                       PATH_INPUT_OPTION, TEXT_INPUT_OPTION, INT_INPUT_OPTION)
+from .find_object import FindObject
 
 LEN_OF_MENUS = len(MENUS)
 
@@ -240,13 +241,25 @@ class FindView():
                 self.complete(self.path_input, self.model.complete_path)
             del keys[i]
 
+        def handle_jump_to_command(keys, k, i):
+            self.focus_inputs()
+            del keys[i]
+
+        def handle_jump_to_menus(keys, k, i):
+            self.focus_menus()
+            del keys[i]
+
+        def handle_jump_to_options(keys, k, i):
+            self.focus_options()
+            del keys[i]
+
         def handle_remain_keys(*args): # lambda : pass is not allowed in python
             pass
 
         keys_handler_dict = {
-            JUMP_TO_COMMAND: lambda *args : self.focus_inputs(),
-            JUMP_TO_MENUS: lambda *args : self.focus_menus(),
-            JUMP_TO_OPTIONS: lambda *args : self.focus_options(),
+            JUMP_TO_COMMAND: handle_jump_to_command,
+            JUMP_TO_MENUS: handle_jump_to_menus,
+            JUMP_TO_OPTIONS: handle_jump_to_options,
             'up': handle_up,
             'down': handle_down,
             TRIGGER_COMPLETITION: handle_trigger_completition_action
@@ -470,7 +483,11 @@ class FindView():
         """
         text_pieces = component_waited_completed.edit_text.split(' ')
         input = text_pieces[-1]
-        self.component_waited_completed = component_waited_completed
+        if self.component_waited_completed is component_waited_completed:
+            self.trigger_counter += 1
+        else:
+            self.component_waited_completed = component_waited_completed
+            self.trigger_counter = 1
 
         # candidates: [(text, data), ...]
         # prefix: string
@@ -478,17 +495,14 @@ class FindView():
         self.notice_board.original_widget = self.create_notice_board(candidates)
         if prefix == '' or prefix == input:
             return
-        else:
-            if prefix.endswith(os.path.sep):
-                candidates, prefix = completer(prefix)
-                self.notice_board.original_widget = self.create_notice_board(candidates)
+        if prefix.endswith(os.path.sep):
+            candidates, prefix = completer(prefix)
+            self.notice_board.original_widget = self.create_notice_board(candidates)
 
-            text_pieces[-1] = prefix
-            result = " ".join(text_pieces)
-            self.component_waited_completed.set_edit_text(result)
-            self.component_waited_completed.set_edit_pos(len(result))
-        # In zsh, it will focus the first candidate. But if we focus the notice_board,
-        # the focus of Edit will lose, which is uncomfortable
+        text_pieces[-1] = prefix
+        result = " ".join(text_pieces)
+        self.component_waited_completed.set_edit_text(result)
+        self.component_waited_completed.set_edit_pos(len(result))
 
     # little helper
     def __is_on_menus(self):
@@ -537,6 +551,7 @@ class FindView():
             new_text = old_text[:last_piece_start] + text
         else:
             new_text = text
+        new_text += ' '
         self.component_waited_completed.set_edit_text(new_text)
         self.component_waited_completed.set_edit_pos(len(new_text))
         # FIXME how can we jump back to component_waited_completed?
@@ -598,8 +613,14 @@ class FindView():
 
     #  UI change interface
     def set_cmd(self, cmd):
-        """Set the display text in command input"""
-        self.command_input.set_edit_text(cmd)
+        """Set the display text in command input, with given FindObject"""
+        pre = FindObject(self.command_input.edit_text)
+        for attr in ['path', 'exec_cmd']: # no opts
+            if getattr(cmd, attr) == "":
+                pre_value = getattr(pre, attr)
+                setattr(cmd, attr, pre_value)
+
+        self.command_input.set_edit_text(cmd.toCmd())
 
 
 def setup_tui():

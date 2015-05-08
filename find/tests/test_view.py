@@ -77,19 +77,17 @@ class ViewTest(unittest.TestCase):
 
     def test_change_path_input(self):
         self.view.path_input.set_edit_text("path")
-        cmd = "find path "
-        self.assertEqual(cmd, self.model.cmd)
+        cmd = "find path"
         self.assertEqual(cmd, self.cmd())
 
     def test_change_actions_input(self):
         self.view.actions_input.set_edit_text("du -h")
         cmd = "find   -exec du -h {} ;"
-        self.assertEqual(cmd, self.model.cmd)
         self.assertEqual(cmd, self.cmd())
 
     def test_change_command_input(self):
         self.view.command_input.set_edit_text("find this")
-        self.assertEqual(self.model.cmd, "find this")
+        self.assertEqual(self.model.cmd.path, "this")
 
     def test_jump_to_menus(self):
         self.press(JUMP_TO_MENUS)
@@ -196,11 +194,11 @@ class ViewTest(unittest.TestCase):
         btn = uw.Button('')
         self.view.component_waited_completed = ed
         self.view.complete_btn_clicked(btn, 'blind')
-        self.assertEqual(ed.edit_text, 'a blind')
+        self.assertEqual(ed.edit_text, 'a blind ')
 
         self.view.component_waited_completed = ed2
         self.view.complete_btn_clicked(btn, 'blind')
-        self.assertEqual(ed2.edit_text, 'blind')
+        self.assertEqual(ed2.edit_text, 'blind ')
 
     def test_menu_chosen(self):
         self.choose_menu(1)
@@ -244,7 +242,7 @@ class ViewTest(unittest.TestCase):
         cb = uw.CheckBox('')
         self.view.opt_checkbox_changed(cb, True, {'option_name': 'opt'})
         self.assertEqual(self.model.options_str, "-opt ")
-        self.assertEqual(self.cmd(), "find  -opt ")
+        self.assertEqual(self.cmd(), "find  -opt")
 
         self.view.opt_checkbox_changed(cb, False, {'option_name': 'opt'})
         self.assertEqual(self.model.options_str, "")

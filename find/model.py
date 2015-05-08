@@ -2,10 +2,11 @@ import os
 from functools import reduce
 
 from .options import  OPTION_NAMES, OPTION_DATA
+from .find_object import FindObject
 
 class FindModel(object):
     def __init__(self):
-        self.cmd = 'find '
+        self.cmd = FindObject('find ')
         self.exec_cmd = ''
         self.path = ''
         self.option_data = {}
@@ -22,7 +23,8 @@ class FindModel(object):
         self.reset_cmd()
 
     def update_command(self, new_command):
-        self.cmd = new_command
+        """Update command with String"""
+        self.cmd = FindObject(new_command)
 
     def update_options(self, opt, text='', remove=False):
         if remove:
@@ -36,14 +38,8 @@ class FindModel(object):
         self.reset_cmd()
 
     def __generate_cmd(self):
-        """generate final command from stored data"""
-        if self.exec_cmd != '':
-            # Use '{} ;' instead of '{} \;' or '{} +'.
-            # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
-            # and '{} +' is used less frequently.
-            return "find %s %s -exec %s {} ;" % (self.path, self.options_str,
-                                                 self.exec_cmd)
-        return "find %s %s" % (self.path, self.options_str)
+        """generate final command object from stored data"""
+        return FindObject.build_with(self.path, self.options_str, self.exec_cmd)
 
     def complete_any(self, input):
         """
@@ -92,6 +88,8 @@ class FindModel(object):
             for ch in zip(prefix, string):
                 if ch[0] == ch[1]:
                     i += 1
+                else:
+                    break
             return prefix[:i]
 
         if len(candidates) is 0:
