@@ -628,7 +628,7 @@ def setup_tui():
     view = FindView(model)
     view.run()
     if EXIT_WITH_SUCCESS:
-        return model.cmd
+        return view.command_input.edit_text
     else:
         return ''
 
