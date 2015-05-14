@@ -1,6 +1,6 @@
 import unittest
 
-from find.find_object import FindObject
+from findtui.find_object import FindObject
 
 class FindObjectTest(unittest.TestCase):
     def is_same(self, cmd, components):

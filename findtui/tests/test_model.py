@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from find.model import FindModel
+from findtui.model import FindModel
 
 class ModelTest(unittest.TestCase):
     def get_completition_data(self, candidates):
@@ -78,14 +78,14 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(prefix, '.git')
 
     def test_complete_path_with_dir(self):
-        dir = 'find/tests'
+        dir = 'findtui/tests'
         if os.path.exists(dir):
             files = os.listdir(dir)
             files = [os.path.join(dir, f) for f in files if f.startswith('t')]
             candidates, prefix = self.model.complete_path(os.path.join(dir, 't'))
             data = self.get_completition_data(candidates)
             self.assertEqual(data, sorted(files))
-            self.assertEqual(prefix, 'find/tests/test_')
+            self.assertEqual(prefix, 'findtui/tests/test_')
 
     def test_complete_path_with_nonexisted_dir(self):
         dir = '.git/HEAD/'

@@ -5,5 +5,5 @@
 
 python -m test_command
 python3 -m test_command
-python -m unittest discover find.tests 'test_*.py'
-python3 -m unittest discover find.tests 'test_*.py'
+python -m unittest discover findtui.tests 'test_*.py'
+python3 -m unittest discover findtui.tests 'test_*.py'

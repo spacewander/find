@@ -3,9 +3,9 @@ import unittest
 import urwid as uw
 from urwid import ExitMainLoop
 
-from find.model import FindModel
-from find.options import MENUS, OPTIONS
-from find.view import (FindView, exit_on_keys, CLR_RADIO_CHOOSE,
+from findtui.model import FindModel
+from findtui.options import MENUS, OPTIONS
+from findtui.view import (FindView, exit_on_keys, CLR_RADIO_CHOOSE,
                        JUMP_TO_MENUS, JUMP_TO_COMMAND, JUMP_TO_OPTIONS,
                        TRIGGER_COMPLETITION)
 
@@ -47,7 +47,7 @@ class ViewTest(unittest.TestCase):
     def test_exit_on_keys(self):
         with self.assertRaises(ExitMainLoopException):
             exit_on_keys('q')
-        from find.view import EXIT_WITH_SUCCESS
+        from findtui.view import EXIT_WITH_SUCCESS
         self.assertFalse(EXIT_WITH_SUCCESS)
         with self.assertRaises(ExitMainLoopException):
             exit_on_keys('ctrl d')
@@ -55,7 +55,7 @@ class ViewTest(unittest.TestCase):
     def test_run_on_keys(self):
         with self.assertRaises(ExitMainLoopException):
             exit_on_keys('ctrl r')
-        from find.view import EXIT_WITH_SUCCESS
+        from findtui.view import EXIT_WITH_SUCCESS
         self.assertTrue(EXIT_WITH_SUCCESS)
 
     # Unable to test specified EXIT_KEY and RUN_KEY.
@@ -65,7 +65,7 @@ class ViewTest(unittest.TestCase):
     def test_click_ok_button(self):
         with self.assertRaises(ExitMainLoopException):
             self.view.ok_button.keypress((1,1), 'enter')
-        from find.view import EXIT_WITH_SUCCESS
+        from findtui.view import EXIT_WITH_SUCCESS
         self.assertTrue(EXIT_WITH_SUCCESS)
 
     def test_click_reset_button(self):

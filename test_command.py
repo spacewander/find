@@ -12,13 +12,13 @@ def run_cmd(args):
 
 class FindTest(unittest.TestCase):
     def test_find_with_args(self):
-        find_py_res = run_cmd('./find.py ./find')
-        find_res = run_cmd('find ./find')
+        find_py_res = run_cmd('./main.py ./findtui')
+        find_res = run_cmd('find ./findtui')
         self.assertEqual(find_py_res, find_res)
 
     def test_find_with_shell_feature(self):
-        find_py_res = run_cmd('./find.py ./find -type f | xargs wc -l')
-        find_res = run_cmd('find ./find -type f | xargs wc -l')
+        find_py_res = run_cmd('./main.py ./findtui -type f | xargs wc -l')
+        find_res = run_cmd('find ./findtui -type f | xargs wc -l')
         self.assertEqual(find_py_res, find_res)
 
 suite = unittest.TestLoader().loadTestsFromTestCase(FindTest)

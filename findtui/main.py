@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 from __future__ import print_function
 
 import subprocess
 import sys
 
-from find.view import setup_tui
+from findtui.view import setup_tui
 
 def print_find_result(args):
     """
@@ -20,11 +17,12 @@ def print_find_result(args):
     except subprocess.CalledProcessError:
         pass
 
-
-if __name__ == '__main__':
+def main():
     if len(sys.argv) == 1:
         cmd = setup_tui()
         if cmd != '':
             print_find_result(cmd)
     else:
         print_find_result(" ".join(['find'] + sys.argv[1:]))
+
+

@@ -27,13 +27,19 @@ Guys uses find(1) in terminal sometimes and feel it too complex to work with, li
 cd somewhere
 # clone and checkout latest tag
 git clone https://github.com/spacewander/find && git checkout $(git describe --tags $(git rev-list --tags --max-count=1))
-# or: git clone -b release --depth 1 https://github.com/spacewander/find
 [sudo] pip install -r requirements.txt
+```
+
+Or download it via pip
+```
+[sudo] pip install findtui
 ```
 
 ### Step 1 : alias it as find/findtui
 
-Add this line to your shell configuration: `alias findtui somewhere/find.py`.
+If you install it via pip, you can skip this section, just run it with `findtui`.
+
+Add this line to your shell configuration: `alias findtui somewhere/find/main.py`.
 You can alias it as `find`, too. However, if you do this in zsh, zsh will refuse to provide argument completition for `find`. Zsh hates cheat.
 This is not a problem in bash, since bash doesn't provide special completition for find.
 
