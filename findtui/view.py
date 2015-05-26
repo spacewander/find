@@ -228,7 +228,7 @@ class FindView():
                         MENUS[idx]
                     )
 
-        def handle_trigger_completition_action(keys, k, i):
+        def handle_trigger_completion_action(keys, k, i):
             if self.__is_on_options_panel():
                 opt = self.options_panel.original_widget.focus.original_widget.contents[1][0]
                 pos = self.options_panel.original_widget.focus_position
@@ -262,7 +262,7 @@ class FindView():
             JUMP_TO_OPTIONS: handle_jump_to_options,
             'up': handle_up,
             'down': handle_down,
-            TRIGGER_COMPLETITION: handle_trigger_completition_action
+            TRIGGER_COMPLETITION: handle_trigger_completion_action
         }
         for i, k in enumerate(keys):
             keys_handler_dict.get(k, handle_remain_keys)(keys, k, i)
@@ -461,7 +461,7 @@ class FindView():
 
     def complete(self, component_waited_completed, completer):
         """
-        Implement auto completition.
+        Implement auto completion.
         This method is relatived with notice_board displayed results,
         a component_waited_completed sending text and received completed text,
         and some methods of FindModel.

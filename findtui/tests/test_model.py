@@ -4,7 +4,7 @@ import unittest
 from findtui.model import FindModel
 
 class ModelTest(unittest.TestCase):
-    def get_completition_data(self, candidates):
+    def get_completion_data(self, candidates):
         """refine data part from given candidates"""
         return sorted([candidate[1] for candidate in candidates])
 
@@ -73,7 +73,7 @@ class ModelTest(unittest.TestCase):
 
     def test_complete_path(self):
         candidates, prefix = self.model.complete_path('.g')
-        data = self.get_completition_data(candidates)
+        data = self.get_completion_data(candidates)
         self.assertEqual(data, ['.git/', '.gitignore'])
         self.assertEqual(prefix, '.git')
 
@@ -83,7 +83,7 @@ class ModelTest(unittest.TestCase):
             files = os.listdir(dir)
             files = [os.path.join(dir, f) for f in files if f.startswith('t')]
             candidates, prefix = self.model.complete_path(os.path.join(dir, 't'))
-            data = self.get_completition_data(candidates)
+            data = self.get_completion_data(candidates)
             self.assertEqual(data, sorted(files))
             self.assertEqual(prefix, 'findtui/tests/test_')
 
@@ -96,7 +96,7 @@ class ModelTest(unittest.TestCase):
 
     def test_complete_options(self):
         candidates, prefix = self.model.complete_options('-t')
-        data = self.get_completition_data(candidates)
+        data = self.get_completion_data(candidates)
         self.assertEqual(data, ['-true', '-type'])
         self.assertEqual(prefix, '-t')
 

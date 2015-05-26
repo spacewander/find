@@ -40,8 +40,8 @@ Or download it via pip
 If you install it via pip, you can skip this section, just run it with `findtui`.
 
 Add this line to your shell configuration: `alias findtui somewhere/find/main.py`.
-You can alias it as `find`, too. However, if you do this in zsh, zsh will refuse to provide argument completition for `find`. Zsh hates cheat.
-This is not a problem in bash, since bash doesn't provide special completition for find.
+You can alias it as `find`, too. However, if you do this in zsh, zsh will refuse to provide argument completion for `find`. Zsh hates cheat.
+This is not a problem in bash, since bash doesn't provide special completion for find.
 
 That's all. Now you can run it with `findtui`:
 
@@ -49,9 +49,9 @@ That's all. Now you can run it with `findtui`:
 
 ### Features
 
-1. zsh like auto-completition
+1. zsh like auto-completion
 
-    [![auto-completition](https://asciinema.org/a/19793.png)](https://asciinema.org/a/19793)
+    [![auto-completion](https://asciinema.org/a/19793.png)](https://asciinema.org/a/19793)
   
 2. choose your options with terminal UI
   
@@ -68,7 +68,7 @@ That's all. Now you can run it with `findtui`:
     | JUMP_TO_MENUS   | ctrl n         | jump to menus |
     | JUMP_TO_OPTIONS | ctrl o         | jump to options panel|
     | JUMP_TO_COMMAND | ctrl e         | jump to command input |
-    | TRIGGER_COMPLETITION | tab       | trigger completition |
+    | TRIGGER_COMPLETITION | tab       | trigger completion |
     | RUN_KEY | ctrl r, enter         | run the command |
     | EXIT_KEY | q, Q, ctrl d         | quit |
 
