@@ -70,13 +70,13 @@ OPTIONS = {
         Option('size', TEXT_INPUT_OPTION, 'uses n units[b|c|w|k|M|G] of space')
     ],
     'Time' : [
-        Option('amin', INT_INPUT_OPTION, 'accessed n minutes ago'),
+        Option('amin', TEXT_INPUT_OPTION, 'accessed n minutes ago'),
         Option('anewer', PATH_INPUT_OPTION, 'accessed more recently than given file was modified'),
-        Option('cmin', INT_INPUT_OPTION, "status was changed n minutes ago"),
+        Option('cmin', TEXT_INPUT_OPTION, "status was changed n minutes ago"),
         Option('cnewer', PATH_INPUT_OPTION, "status was changed more recently than given file was modified"),
-        Option('mmin', INT_INPUT_OPTION, 'modified n minutes ago'),
+        Option('mmin', TEXT_INPUT_OPTION, 'modified n minutes ago'),
         Option('newer', PATH_INPUT_OPTION, 'modified more recently than file given'),
-        Option('used', INT_INPUT_OPTION, 'accessed n days after its status was last changed'),
+        Option('used', TEXT_INPUT_OPTION, 'accessed n days after its status was last changed'),
     ],
     'Type' : [
         Option('fstype', TEXT_INPUT_OPTION, 'is on a filesystem of given type'),
@@ -86,7 +86,7 @@ OPTIONS = {
     ],
     'Others' : [
         Option('inum', INT_INPUT_OPTION, 'has inode number n'),
-        Option('links', INT_INPUT_OPTION, 'has n links'),
+        Option('links', TEXT_INPUT_OPTION, 'has n links'),
         Option('true', CHECKBOX_OPTION, 'always true'),
         Option('false', CHECKBOX_OPTION, 'always false'),
     ],
@@ -125,9 +125,9 @@ if GNU_FIND:
         ],
         'Size' : [],
         'Time' : [
-            Option('atime', INT_INPUT_OPTION, 'accessed n*24 hours ago'),
-            Option('ctime', INT_INPUT_OPTION, 'status was changed n*24 hours ago'),
-            Option('mtime', INT_INPUT_OPTION, 'modified n*24 hours ago'),
+            Option('atime', TEXT_INPUT_OPTION, 'accessed n*24 hours ago'),
+            Option('ctime', TEXT_INPUT_OPTION, 'status was changed n*24 hours ago'),
+            Option('mtime', TEXT_INPUT_OPTION, 'modified n*24 hours ago'),
         ],
         'Type' : [
             Option('xtype', RADIO_BUTTON_OPTION, 'same as -type, but for symbolic link, it checks the type of file',
@@ -164,7 +164,7 @@ elif BSD_FIND:
         ],
         'Size' : [],
         'Time' : [
-            Option('Bmin', INT_INPUT_OPTION, "file's inode created n minutes ago"),
+            Option('Bmin', TEXT_INPUT_OPTION, "file's inode created n minutes ago"),
             Option('Bnewer', PATH_INPUT_OPTION, "file's inode created more recently than given file was modified"),
             Option('Btime', TEXT_INPUT_OPTION, "file's inode created n units[s|m|h|d|w] ago, the default unit is d"),
             Option('atime', TEXT_INPUT_OPTION, 'accessed n units[s|m|h|d|w] ago, the default unit is d'),
