@@ -1,4 +1,5 @@
 import unittest
+from random import randint
 
 import urwid as uw
 from urwid import ExitMainLoop
@@ -121,6 +122,42 @@ class ViewTest(unittest.TestCase):
         self.assertEqual(self.view.frame.body.focus, self.view.menus_area)
         self.assertEqual(self.view.menus.focus_position,
                          self.view.current_selected_menu_idx)
+
+    def assert_board_not_changed(self, old_board):
+        new_board = self.view.notice_board.original_widget
+        self.assertNotEqual(new_board, old_board)
+        return new_board
+
+    def test_press_up_or_down_on_options_change_notice(self):
+        self.choose_menu(0)
+        # First, we need to focus on the options_panel
+        # and make sure first option not focused
+        self.view.frame.body.focus_position = self.view.focus_order('options_panel')
+        self.view.options_panel.original_widget.focus_position = 1
+        old_board = self.view.notice_board.original_widget
+
+        self.press('up')
+        old_board = self.assert_board_not_changed(old_board)
+
+        self.press('down')
+        old_board = self.assert_board_not_changed(old_board)
+
+        # Each call of `set_notice` will create a new notice_board,
+        # no matter if the text changed
+        self.press(('mouse release',))
+        self.assert_board_not_changed(old_board)
+
+        size = len(OPTIONS[MENUS[0]])
+        self.view.options_panel.original_widget.focus_position = size - 1
+        old_board = self.view.notice_board.original_widget
+        self.press('down')
+        self.assertEqual(self.view.notice_board.original_widget, old_board)
+
+    def test_press_up_into_last_option(self):
+        self.view.frame.body.focus_position = self.view.focus_order('notice_board')
+        old_board = self.view.notice_board.original_widget
+        self.press('up')
+        self.assertNotEqual(self.view.notice_board.original_widget, old_board)
 
     def test_press_up_on_menu_change_options(self):
         self.view.menus.focus_position = 1
@@ -280,4 +317,22 @@ class ViewTest(unittest.TestCase):
 
         self.view.opt_path_input_changed('opt', pi, "")
         self.assertEqual(self.model.options_str, "")
+
+    # create GUI
+    def test_create_notice_board(self):
+        listBox = uw.ListBox
+        example = """It is an example"""
+        self.assertIsInstance(self.view.create_example_board(example),
+                              listBox)
+        self.assertIsInstance(self.view.create_completion_board([]), listBox)
+        data = [('text', 'data'), ('text', 'data')]
+        # path or other
+        self.assertIsInstance(self.view.create_completion_board(data), listBox)
+        data = [('text', 'text'), ('text', 'text')]
+        # options
+        self.assertIsInstance(self.view.create_completion_board(data), listBox)
+
+    def test_create_options(self):
+        choice = MENUS[randint(0, len(MENUS)-1)]
+        self.assertIsInstance(self.view.create_options(choice), uw.ListBox)
 

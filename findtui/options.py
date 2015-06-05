@@ -32,18 +32,44 @@ if  current_os == 'Linux' or current_os.startswith('CYGWIN'):
 else:
     BSD_FIND = True # have not support find(1) on other posix system yet :)
 
-Option = namedtuple('Option', ['name', 'type', 'description', 'data'])
-Option.__new__.__defaults__ = ('', CHECKBOX_OPTION, '', {})
+Option = namedtuple('Option', ['name', 'type', 'description', 'data', 'example'])
+Option.__new__.__defaults__ = ('', CHECKBOX_OPTION, '', {}, """""")
 
 OPTIONS = {
     'Options' : [
-        Option('H', CHECKBOX_OPTION, 'only follow symlinks when resolving command-line arguments'),
+        Option('H', CHECKBOX_OPTION,
+               'only follow symlinks when resolving command-line arguments'),
         Option('L', CHECKBOX_OPTION, 'follow symlinks'),
         Option('P', CHECKBOX_OPTION, 'never follow symlinks'),
-        Option('depth', CHECKBOX_OPTION, 'process contents before the directory itself'),
+        Option('depth', CHECKBOX_OPTION,
+               'process contents before the directory itself',
+               example="""
+               $ find .
+               .
+               ./a
+               ./b
+
+               $ find . -depth
+               ./a
+               ./b
+               .
+               """),
         Option('ignore_readdir_race', CHECKBOX_OPTION, 'ignore stat file failure'),
-        Option('maxdepth', INT_INPUT_OPTION, 'apply at most n levels'),
-        Option('mindepth', INT_INPUT_OPTION, 'do not apply at levels less than n'),
+        Option('maxdepth', INT_INPUT_OPTION, 'apply at most n levels',
+               example="""
+               $ find . -maxdepth 0
+               .
+
+               $ find . -maxdepth 2
+               .
+               ./1
+               ./1/2
+               """),
+        Option('mindepth', INT_INPUT_OPTION, 'do not apply at levels less than n',
+               example="""
+               $ find . -mindepth 2
+               ./1/2
+               """),
         Option('mount', CHECKBOX_OPTION, 'do not apply on other filesystems'),
         Option('noignore_readdir_race', CHECKBOX_OPTION, 'turn off -ignore_readdir_race')
     ],
@@ -187,11 +213,15 @@ for k in OPTIONS:
     OPTIONS[k] += PLATFORM_SPECIFIC_OPTIONS.get(k, [])
     OPTIONS[k].sort()
 
+# MENUS : ['Actions', ... 'Type']
 MENUS = sorted([k for k in OPTIONS])
 
+# OPTION_NAMES : [..., '-mtime', ...]
+# OPTION_DATA : {..., '-mtime' : '-mtime -- blahblah', ...}
 OPTION_NAMES = []
 OPTION_DATA = {}
 for k in OPTIONS:
     OPTION_NAMES.extend(['-' + opt.name for opt in OPTIONS[k]])
     for opt in OPTIONS[k]:
         OPTION_DATA['-'+opt.name] = "-%s -- %s" % (opt.name, opt.description)
+

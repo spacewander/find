@@ -1,6 +1,7 @@
 import os
 import platform
 import struct
+import textwrap
 from functools import reduce
 
 import urwid as uw
@@ -150,7 +151,7 @@ class FindView():
         self.__options_panels = {}
         self.options_panel = uw.Padding(self.create_options(MENUS[middle_of_menu]))
 
-        self.notice_board = uw.Padding(self.create_notice_board())
+        self.notice_board = uw.Padding(uw.ListBox(uw.SimpleListWalker([])))
 
         self.actions_input = uw.Edit("Execute Command:")
         self.path_input = uw.Edit("Path:")
@@ -208,9 +209,22 @@ class FindView():
         Return keys so that the widgets can receive the input.
         """
         def handle_up(keys, k, i):
-            if  self.__is_on_options_panel() and self.__is_on_option_n(0):
-                self.focus_menus()
-                del keys[i] # no need to up again
+            if self.__is_on_options_panel():
+                if self.__is_on_option_n(0):
+                    self.focus_menus()
+                    del keys[i] # no need to up again
+                else:
+                    n = self.options_panel.original_widget.focus_position
+                    choice = MENUS[self.current_selected_menu_idx]
+                    option = OPTIONS[choice][n-1]
+                    example = option.example
+                    self.set_notice(example)
+            elif self.__is_on_notice_board():
+                choice = MENUS[self.current_selected_menu_idx]
+                size = len(OPTIONS[choice])
+                option = OPTIONS[choice][size-1]
+                example = option.example
+                self.set_notice(example)
             elif self.__is_on_menus():
                 idx = self.menus.focus_position - 1
                 if idx >= 0:
@@ -227,6 +241,14 @@ class FindView():
                     self.options_panel.original_widget = self.create_options(
                         MENUS[idx]
                     )
+            elif self.__is_on_options_panel():
+                choice = MENUS[self.current_selected_menu_idx]
+                size = len(OPTIONS[choice])
+                if not self.__is_on_option_n(size-1):
+                    n = self.options_panel.original_widget.focus_position
+                    option = OPTIONS[choice][n+1]
+                    example = option.example
+                    self.set_notice(example)
 
         def handle_trigger_completion_action(keys, k, i):
             if self.__is_on_options_panel():
@@ -253,6 +275,14 @@ class FindView():
             self.focus_options()
             del keys[i]
 
+        def handle_click(keys, k, i):
+            if self.__is_on_options_panel:
+                n = self.options_panel.original_widget.focus_position
+                choice = MENUS[self.current_selected_menu_idx]
+                option = OPTIONS[choice][n]
+                example = option.example
+                self.set_notice(example)
+
         def handle_remain_keys(*args): # lambda : pass is not allowed in python
             pass
 
@@ -262,9 +292,12 @@ class FindView():
             JUMP_TO_OPTIONS: handle_jump_to_options,
             'up': handle_up,
             'down': handle_down,
-            TRIGGER_COMPLETITION: handle_trigger_completion_action
+            TRIGGER_COMPLETITION: handle_trigger_completion_action,
+            'mouse release': handle_click,
         }
         for i, k in enumerate(keys):
+            if isinstance(k, tuple):
+                k = k[0]
             keys_handler_dict.get(k, handle_remain_keys)(keys, k, i)
 
         return keys
@@ -376,7 +409,19 @@ class FindView():
             )
         return self.__options_panels[choice]
 
-    def create_notice_board(self, contents=[]):
+    def create_example_board(self, example):
+        """Create a board with example, used when an option is focused"""
+        return uw.ListBox(uw.SimpleListWalker(
+            [uw.Columns([
+                uw.Text(textwrap.dedent(example))
+            ])]
+        ))
+
+    def set_notice(self, text):
+        self.notice_board.original_widget = self.create_example_board(text)
+
+    def create_completion_board(self, contents):
+        """Create a board with complete_btn, used when a completion is triggered"""
         # contents: [(text, data), ...]
         if len(contents) is 0:
             return uw.ListBox(uw.SimpleListWalker([]))
@@ -415,7 +460,8 @@ class FindView():
                 for content in contents:
                     btn = uw.Button(content[0], on_press=self.complete_btn_clicked,
                                     user_data=content[1])
-                    board.append(uw.AttrMap(uw.Columns([btn]), None, focus_map='reversed'))
+                    board.append(uw.AttrMap(uw.Columns([btn]), None,
+                                            focus_map='reversed'))
             else:
                 rows = min(len(contents) // content_per_row, line_num)
                 for i in range(rows):
@@ -492,12 +538,12 @@ class FindView():
         # candidates: [(text, data), ...]
         # prefix: string
         candidates, prefix = completer(input)
-        self.notice_board.original_widget = self.create_notice_board(candidates)
+        self.notice_board.original_widget = self.create_completion_board(candidates)
         if prefix == '' or prefix == input:
             return
         if prefix.endswith(os.path.sep):
             candidates, prefix = completer(prefix)
-            self.notice_board.original_widget = self.create_notice_board(candidates)
+            self.notice_board.original_widget = self.create_completion_board(candidates)
 
         text_pieces[-1] = prefix
         result = " ".join(text_pieces)
@@ -512,6 +558,10 @@ class FindView():
     def __is_on_options_panel(self):
         """If focus is on the options_panel"""
         return self.frame.body.focus == self.options_panel
+
+    def __is_on_notice_board(self):
+        """If focus is on the notice_board"""
+        return self.frame.body.focus == self.notice_board
 
     def __is_on_option_n(self, n):
         """If focus is on nth option(n starts from 0)"""
