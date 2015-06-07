@@ -74,41 +74,154 @@ OPTIONS = {
         Option('noignore_readdir_race', CHECKBOX_OPTION, 'turn off -ignore_readdir_race')
     ],
     'Name' : [
-        Option('ilname', PATH_INPUT_OPTION, 'is a symbolic link matched given pattern, case insensitive'),
-        Option('iname', PATH_INPUT_OPTION, 'basename matches pattern given, case insensitive'),
-        Option('iregex', PATH_INPUT_OPTION, 'name matches regular expression pattern given, case insensitive'),
-        Option('iwholename', PATH_INPUT_OPTION, 'name matches pattern given, case insensitive'),
-        Option('lname', PATH_INPUT_OPTION, 'is a symbolic link matched given pattern'),
-        Option('name', PATH_INPUT_OPTION, 'basename matches pattern given'),
-        Option('path', PATH_INPUT_OPTION, 'pathname matches pattern given'),
-        Option('regex', PATH_INPUT_OPTION, 'name matches regular expression pattern given'),
+        Option('ilname', PATH_INPUT_OPTION,
+               'is a symbolic link matched given pattern, case insensitive',
+               example="""
+               $ find . -ilname 'f*'
+               ./lsdiff
+               $ file lsdiff
+               lsdiff: symbolic link to `filterdiff'`
+               """),
+        Option('iname', PATH_INPUT_OPTION,
+               'basename matches pattern given, case insensitive',
+               example="""
+               $ find . -iname 'ls*'
+               ./lsdiff
+               $ find . -iname '*ls*'
+               ./lsdiff
+               ./hwloc-ls
+               """),
+        Option('iregex', PATH_INPUT_OPTION,
+               'name matches regular expression pattern given, case insensitive',
+               example="""
+               $ find . -iregex 'ls.*' # use re
+               $ find . -iregex './ls.*' # match path instead of basename
+               ./lsdiff
+               """),
+        Option('iwholename', PATH_INPUT_OPTION,
+               'name matches pattern given, case insensitive',
+               example="""
+               $ find . -iwholename './ls*' # match path
+               ./lsdiff
+               """),
+        Option('lname', PATH_INPUT_OPTION,
+               'is a symbolic link matched given pattern',
+               example="""
+               $ find . -lname 'f*'
+               ./lsdiff
+               $ file lsdiff
+               lsdiff: symbolic link to `filterdiff'`
+               """),
+        Option('name', PATH_INPUT_OPTION, 'basename matches pattern given',
+               example="""
+               $ find . -name 'ls*'
+               ./lsdiff
+               $ find . -name '*ls*'
+               ./lsdiff
+               ./hwloc-ls
+               """),
+        Option('path', PATH_INPUT_OPTION, 'pathname matches pattern given',
+               example="""
+               $ find . -path './ls*' # match path
+               ./lsdiff
+               """),
+        Option('regex', PATH_INPUT_OPTION,
+               'name matches regular expression pattern given',
+               example="""
+               $ find . -iregex 'ls.*' # use re
+               $ find . -iregex './ls.*' # match path instead of basename
+               ./lsdiff
+               """),
         Option('samefile', PATH_INPUT_OPTION, 'refers to the same inode as name given'),
     ],
     'Perm' : [
-        Option('group', TEXT_INPUT_OPTION, 'belongs to group given'),
+        Option('group', TEXT_INPUT_OPTION, 'belongs to group given',
+               example="""
+               $ find . -group root
+               ./files_owned_by_root_group
+               """),
         Option('nogroup', CHECKBOX_OPTION, "no group corresponds to file's numeric group ID"),
         Option('nouser', CHECKBOX_OPTION, "no user corresponds to file's numeric user ID"),
-        Option('perm', TEXT_INPUT_OPTION, 'the permission bits mode are set for the file'),
-        Option('user', TEXT_INPUT_OPTION, 'is owned by user given'),
+        Option('perm', TEXT_INPUT_OPTION,
+               'the permission bits mode are set for the file',
+               example="""
+               # find files writable by their owner and group
+               $ find . -perm -220
+               $ find . -perm -g+w,u+w
+               # find files writable by their owner or group
+               $ find . -perm /220
+               $ find . -perm /g+w,u+w
+               $ find . -perm 222 # find files only writable(can't read or execute)
+               """),
+        Option('user', TEXT_INPUT_OPTION, 'is owned by user given',
+               example="""
+               $ find . -user root
+               ./files_owned_by_root
+               """),
     ],
     'Size' : [
-        Option('empty', CHECKBOX_OPTION, 'is empty and is a regular file or directory'),
-        Option('size', TEXT_INPUT_OPTION, 'uses n units[b|c|w|k|M|G] of space')
+        Option('empty', CHECKBOX_OPTION,
+               'is empty and is a regular file or directory',
+               example="""
+               $ find . -empty
+               ./.git/branches
+               $ ls ./.git/branches # empty directory
+               """),
+        Option('size', TEXT_INPUT_OPTION, 'uses n units[b|c|w|k|M|G] of space',
+               example="""
+               $ find . +20k # files > 20k
+               $ find . 20k # files == 20k
+               $ find . -20k # files < 20k
+               """)
     ],
     'Time' : [
-        Option('amin', TEXT_INPUT_OPTION, 'accessed n minutes ago'),
-        Option('anewer', PATH_INPUT_OPTION, 'accessed more recently than given file was modified'),
-        Option('cmin', TEXT_INPUT_OPTION, "status was changed n minutes ago"),
-        Option('cnewer', PATH_INPUT_OPTION, "status was changed more recently than given file was modified"),
-        Option('mmin', TEXT_INPUT_OPTION, 'modified n minutes ago'),
-        Option('newer', PATH_INPUT_OPTION, 'modified more recently than file given'),
-        Option('used', TEXT_INPUT_OPTION, 'accessed n days after its status was last changed'),
+        Option('amin', TEXT_INPUT_OPTION, 'accessed n minutes ago',
+               example="""
+               $ find . -amin +20 # now - atime > 20 minutes
+               $ find . -amin 20 # now - atime == 20 minutes
+               $ find . -amin -20 # now - atime < 20 minutes
+               """),
+        Option('anewer', PATH_INPUT_OPTION,
+               'accessed more recently than given file was modified',
+               example="""$ find . -anewer this_file"""),
+        Option('cmin', TEXT_INPUT_OPTION, "status was changed n minutes ago",
+               example="""
+               $ find . -cmin +20 # now - ctime > 20 minutes
+               $ find . -cmin 20 # now - ctime == 20 minutes
+               $ find . -cmin -20 # now - ctime < 20 minutes
+               """),
+        Option('cnewer', PATH_INPUT_OPTION,
+               "status was changed more recently than given file was modified",
+               example="""$ find . -cnewer this_file"""),
+        Option('mmin', TEXT_INPUT_OPTION, 'modified n minutes ago',
+               example="""
+               $ find . -mmin +20 # now - mtime > 20 minutes
+               $ find . -mmin 20 # now - mtime == 20 minutes
+               $ find . -mmin -20 # now - mtime < 20 minutes
+               """),
+        Option('newer', PATH_INPUT_OPTION,
+               'modified more recently than file given',
+               example="""$ find . -newer this_file"""),
+        Option('used', TEXT_INPUT_OPTION,
+               'accessed n days after its status was last changed',
+               example="""
+               $ find . -used +20 # atime - ctime > 20 days
+               $ find . -used 20 # atime - ctime == 20 days
+               $ find . -used -20 # atime - ctime < 20 days
+               """),
     ],
     'Type' : [
-        Option('fstype', TEXT_INPUT_OPTION, 'is on a filesystem of given type'),
+        Option('fstype', TEXT_INPUT_OPTION, 'is on a filesystem of given type',
+               example="""$ find . -fstype ext4"""),
         Option('type', RADIO_BUTTON_OPTION, 'is of type chosen', {
-            'type' : ['b', 'c', 'd', 'p', 'f', 'l', 's']
-        }),
+                'type' : ['b', 'c', 'd', 'p', 'f', 'l', 's']
+                },
+                example="""
+                $ find . -type f # file
+                $ find . -type d # directory
+                $ find . -type l # symbolic link
+                $ find . -type s # socket
+                """),
     ],
     'Others' : [
         Option('inum', INT_INPUT_OPTION, 'has inode number n'),
@@ -117,10 +230,25 @@ OPTIONS = {
         Option('false', CHECKBOX_OPTION, 'always false'),
     ],
     'Actions' : [
-        Option('delete', CHECKBOX_OPTION, 'delete files'),
-        Option('exec', TEXT_INPUT_OPTION, 'execute command'),
-        Option('execdir', TEXT_INPUT_OPTION, 'execute command from the subdirectory containing matched file'),
-        Option('ls', TEXT_INPUT_OPTION, 'list current file with ls -dils'),
+        Option('delete', CHECKBOX_OPTION, 'delete files',
+               example="""
+               $ find . -name trash -delete # delete trash
+               """),
+        Option('exec', TEXT_INPUT_OPTION, 'execute command',
+               example="""
+               $ find . -name trash* -exec rm {} \;
+               # rm trash0; rm trash1
+               $ find . -name trash* -exec rm {} +
+               # rm trash0 trash1
+               """),
+        Option('execdir', TEXT_INPUT_OPTION,
+               'execute command from the subdirectory containing matched file'),
+        Option('ls', TEXT_INPUT_OPTION,
+               'list current file with ls -dils',
+               example="""
+               $ find . -name match -ls
+               4129127    4 drwxrwxr-x   3 ...
+               """),
         Option('ok', TEXT_INPUT_OPTION, 'like -exec but ask user first'),
         Option('okdir', TEXT_INPUT_OPTION, 'like -execdir but ask user first'),
         Option('print', CHECKBOX_OPTION, 'print full file name'),
@@ -146,14 +274,40 @@ if GNU_FIND:
             Option('readable', CHECKBOX_OPTION, 'is readable'),
             Option('writable', CHECKBOX_OPTION, 'is writable'),
             Option('executable', CHECKBOX_OPTION, 'is executable'),
-            Option('gid', TEXT_INPUT_OPTION, 'numeric group ID is n'),
-            Option('uid', TEXT_INPUT_OPTION, 'numeric user ID is n'),
+            Option('gid', TEXT_INPUT_OPTION, 'numeric group ID is n',
+                   example="""
+                   $ find . -gid 1000 # gid == 1000
+                   $ find . -gid -1000 # gid < 1000
+                   $ find . -gid +1000 # gid > 1000
+                   """),
+            Option('uid', TEXT_INPUT_OPTION, 'numeric user ID is n',
+                   example="""
+                   $ find . -uid 1000 # uid == 1000
+                   $ find . -uid -1000 # uid < 1000
+                   $ find . -uid +1000 # uid > 1000
+                   """),
         ],
         'Size' : [],
         'Time' : [
-            Option('atime', TEXT_INPUT_OPTION, 'accessed n*24 hours ago'),
-            Option('ctime', TEXT_INPUT_OPTION, 'status was changed n*24 hours ago'),
-            Option('mtime', TEXT_INPUT_OPTION, 'modified n*24 hours ago'),
+            Option('atime', TEXT_INPUT_OPTION, 'accessed n*24 hours ago',
+               example="""
+               $ find . -atime +20 # now - atime > 20 days
+               $ find . -atime 20 # now - atime == 20 days
+               $ find . -atime -20 # now - atime < 20 days
+               """),
+            Option('ctime', TEXT_INPUT_OPTION,
+                   'status was changed n*24 hours ago',
+                   example="""
+                   $ find . -ctime +20 # now - ctime > 20 days
+                   $ find . -ctime 20 # now - ctime == 20 days
+                   $ find . -ctime -20 # now - ctime < 20 days
+                   """),
+            Option('mtime', TEXT_INPUT_OPTION, 'modified n*24 hours ago',
+               example="""
+               $ find . -mtime +20 # now - mtime > 20 daya
+               $ find . -mtime 20 # now - mtime == 20 days
+               $ find . -mtime -20 # now - mtime < 20 days
+               """),
         ],
         'Type' : [
             Option('xtype', RADIO_BUTTON_OPTION, 'same as -type, but for symbolic link, it checks the type of file',
@@ -168,7 +322,12 @@ if GNU_FIND:
             Option('fprint', PATH_INPUT_OPTION, 'print full file name into file'),
             Option('fprint0', PATH_INPUT_OPTION, 'like -print0 but write to file like -fprintf'),
             Option('fprintf', PATH_INPUT_OPTION, 'like -printf but write to file like -fprint'),
-            Option('printf', TEXT_INPUT_OPTION, 'print format on the standard output'),
+            Option('printf', TEXT_INPUT_OPTION,
+                   'print format on the standard output',
+                   example="""
+                   $ find . -name find -printf "%p size:%s\n"
+                   ./build/lib.linux-x86_64-2.7/find size:4096
+                   """),
             Option('quit', CHECKBOX_OPTION, 'exit immediately')
         ]
     }
@@ -185,7 +344,11 @@ elif BSD_FIND:
             Option('ipath', PATH_INPUT_OPTION, 'pathname matches pattern given, case insensitive'),
         ],
         'Perm' : [
-            Option('gid', TEXT_INPUT_OPTION, 'same as -group gname'),
+            Option('gid', TEXT_INPUT_OPTION, 'same as -group gname',
+               example="""
+               $ find . -group root
+               ./files_owned_by_root_group
+               """),
             Option('flags', TEXT_INPUT_OPTION, 'with or without specific flags'),
         ],
         'Size' : [],
@@ -193,9 +356,27 @@ elif BSD_FIND:
             Option('Bmin', TEXT_INPUT_OPTION, "file's inode created n minutes ago"),
             Option('Bnewer', PATH_INPUT_OPTION, "file's inode created more recently than given file was modified"),
             Option('Btime', TEXT_INPUT_OPTION, "file's inode created n units[s|m|h|d|w] ago, the default unit is d"),
-            Option('atime', TEXT_INPUT_OPTION, 'accessed n units[s|m|h|d|w] ago, the default unit is d'),
-            Option('ctime', TEXT_INPUT_OPTION, 'status changed n units[s|m|h|d|w] ago, the default unit is d'),
-            Option('mtime', TEXT_INPUT_OPTION, 'modified n units[s|m|h|d|w] ago, the default unit is d'),
+            Option('atime', TEXT_INPUT_OPTION,
+                   'accessed n units[s|m|h|d|w] ago, the default unit is d',
+                   example="""
+                   $ find . -atime +20 # now - atime > 20 days
+                   $ find . -atime 20 # now - atime == 20 days
+                   $ find . -atime -20 # now - atime < 20 days
+                   """),
+            Option('ctime', TEXT_INPUT_OPTION,
+                   'status changed n units[s|m|h|d|w] ago, the default unit is d',
+                   example="""
+                   $ find . -ctime +20 # now - ctime > 20 days
+                   $ find . -ctime 20 # now - ctime == 20 days
+                   $ find . -ctime -20 # now - ctime < 20 days
+                   """),
+            Option('mtime', TEXT_INPUT_OPTION,
+                   'modified n units[s|m|h|d|w] ago, the default unit is d',
+                   example="""
+                   $ find . -mtime +20 # now - mtime > 20 days
+                   $ find . -mtime 20 # now - mtime == 20 days
+                   $ find . -mtime -20 # now - mtime < 20 days
+                   """),
         ],
         'Type' : [
             Option('xattr', CHECKBOX_OPTION, 'has any extended attributes'),

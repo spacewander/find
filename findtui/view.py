@@ -217,14 +217,12 @@ class FindView():
                     n = self.options_panel.original_widget.focus_position
                     choice = MENUS[self.current_selected_menu_idx]
                     option = OPTIONS[choice][n-1]
-                    example = option.example
-                    self.set_notice(example)
+                    self.set_example(option)
             elif self.__is_on_notice_board():
                 choice = MENUS[self.current_selected_menu_idx]
                 size = len(OPTIONS[choice])
                 option = OPTIONS[choice][size-1]
-                example = option.example
-                self.set_notice(example)
+                self.set_example(option)
             elif self.__is_on_menus():
                 idx = self.menus.focus_position - 1
                 if idx >= 0:
@@ -247,8 +245,7 @@ class FindView():
                 if not self.__is_on_option_n(size-1):
                     n = self.options_panel.original_widget.focus_position
                     option = OPTIONS[choice][n+1]
-                    example = option.example
-                    self.set_notice(example)
+                    self.set_example(option)
 
         def handle_trigger_completion_action(keys, k, i):
             if self.__is_on_options_panel():
@@ -280,8 +277,7 @@ class FindView():
                 n = self.options_panel.original_widget.focus_position
                 choice = MENUS[self.current_selected_menu_idx]
                 option = OPTIONS[choice][n]
-                example = option.example
-                self.set_notice(example)
+                self.set_example(option)
 
         def handle_remain_keys(*args): # lambda : pass is not allowed in python
             pass
@@ -417,8 +413,9 @@ class FindView():
             ])]
         ))
 
-    def set_notice(self, text):
-        self.notice_board.original_widget = self.create_example_board(text)
+    def set_example(self, option):
+        self.notice_board.original_widget = \
+                self.create_example_board(option.example)
 
     def create_completion_board(self, contents):
         """Create a board with complete_btn, used when a completion is triggered"""
