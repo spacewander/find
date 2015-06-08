@@ -4,6 +4,7 @@ except ImportError:
     enum = None
 
 import platform
+import textwrap
 from collections import namedtuple
 
 
@@ -27,7 +28,7 @@ GNU_FIND = False
 BSD_FIND = False
 current_os = platform.system()
 
-if  current_os == 'Linux' or current_os.startswith('CYGWIN'):
+if current_os == 'Linux' or current_os.startswith('CYGWIN'):
     GNU_FIND = True
 else:
     BSD_FIND = True # have not support find(1) on other posix system yet :)
@@ -392,6 +393,12 @@ else:
 
 for k in OPTIONS:
     OPTIONS[k] += PLATFORM_SPECIFIC_OPTIONS.get(k, [])
+    # format example, remove indents
+    for idx, opt in enumerate(OPTIONS[k]):
+        if opt.example != '':
+            # namedtuple is immutable
+            OPTIONS[k][idx] = Option(opt.name, opt.type, opt.description,
+                    opt.data, textwrap.dedent(opt.example))
     OPTIONS[k].sort()
 
 # MENUS : ['Actions', ... 'Type']

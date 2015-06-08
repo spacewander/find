@@ -1,7 +1,6 @@
 import os
 import platform
 import struct
-import textwrap
 from functools import reduce
 
 import urwid as uw
@@ -118,6 +117,20 @@ def get_terminal_size():
     return tuple_xy
 
 
+class FocusListWalker(uw.SimpleFocusListWalker):
+    """
+    Add focus callback to SimpleFocusListWalker.
+    focus_handler will receive a focus_position argument each time the focus changed.
+    """
+    def __init__(self, contents, focus_handler):
+        super(FocusListWalker, self).__init__(contents)
+        self.focus_handler = focus_handler
+
+    def set_focus(self, pos):
+        super(FocusListWalker, self).set_focus(pos)
+        self.focus_handler(pos)
+
+
 class FindView():
     def __init__(self, model):
         """
@@ -145,11 +158,12 @@ class FindView():
 
         self.menus = self.create_menubar(MENUS)
         middle_of_menu = len(MENUS) // 2 - 1
-        self.current_selected_menu_idx = middle_of_menu
-        self.menus.focus_position = middle_of_menu
 
         self.__options_panels = {}
         self.options_panel = uw.Padding(self.create_options(MENUS[middle_of_menu]))
+
+        self.current_selected_menu_idx = middle_of_menu
+        self.menus.focus_position = middle_of_menu
 
         self.notice_board = uw.Padding(uw.ListBox(uw.SimpleListWalker([])))
 
@@ -213,39 +227,6 @@ class FindView():
                 if self.__is_on_option_n(0):
                     self.focus_menus()
                     del keys[i] # no need to up again
-                else:
-                    n = self.options_panel.original_widget.focus_position
-                    choice = MENUS[self.current_selected_menu_idx]
-                    option = OPTIONS[choice][n-1]
-                    self.set_example(option)
-            elif self.__is_on_notice_board():
-                choice = MENUS[self.current_selected_menu_idx]
-                size = len(OPTIONS[choice])
-                option = OPTIONS[choice][size-1]
-                self.set_example(option)
-            elif self.__is_on_menus():
-                idx = self.menus.focus_position - 1
-                if idx >= 0:
-                    self.current_selected_menu_idx = idx
-                    self.options_panel.original_widget = self.create_options(
-                        MENUS[idx]
-                    )
-
-        def handle_down(keys, k, i):
-            if self.__is_on_menus():
-                idx = self.menus.focus_position + 1
-                if idx < LEN_OF_MENUS:
-                    self.current_selected_menu_idx = idx
-                    self.options_panel.original_widget = self.create_options(
-                        MENUS[idx]
-                    )
-            elif self.__is_on_options_panel():
-                choice = MENUS[self.current_selected_menu_idx]
-                size = len(OPTIONS[choice])
-                if not self.__is_on_option_n(size-1):
-                    n = self.options_panel.original_widget.focus_position
-                    option = OPTIONS[choice][n+1]
-                    self.set_example(option)
 
         def handle_trigger_completion_action(keys, k, i):
             if self.__is_on_options_panel():
@@ -272,13 +253,6 @@ class FindView():
             self.focus_options()
             del keys[i]
 
-        def handle_click(keys, k, i):
-            if self.__is_on_options_panel:
-                n = self.options_panel.original_widget.focus_position
-                choice = MENUS[self.current_selected_menu_idx]
-                option = OPTIONS[choice][n]
-                self.set_example(option)
-
         def handle_remain_keys(*args): # lambda : pass is not allowed in python
             pass
 
@@ -287,13 +261,9 @@ class FindView():
             JUMP_TO_MENUS: handle_jump_to_menus,
             JUMP_TO_OPTIONS: handle_jump_to_options,
             'up': handle_up,
-            'down': handle_down,
             TRIGGER_COMPLETITION: handle_trigger_completion_action,
-            'mouse release': handle_click,
         }
         for i, k in enumerate(keys):
-            if isinstance(k, tuple):
-                k = k[0]
             keys_handler_dict.get(k, handle_remain_keys)(keys, k, i)
 
         return keys
@@ -310,7 +280,12 @@ class FindView():
             uw.connect_signal(button, 'click', self.menu_chosen, user_args=[i])
             body.append(uw.AttrMap(button, None, focus_map='reversed'))
         # put all menus vertically, male clicking on them easier
-        return uw.ListBox(uw.SimpleFocusListWalker(body))
+        return uw.ListBox(FocusListWalker(body, self.__set_options))
+
+    def __set_options(self, n):
+        if 0 <= n < len(MENUS):
+            self.current_selected_menu_idx = n
+            self.options_panel.original_widget = self.create_options(MENUS[n])
 
     def create_options(self, choice):
         """
@@ -401,21 +376,22 @@ class FindView():
                     body.append(uw.AttrMap(col, None, focus_map='reversed'))
 
             self.__options_panels[choice] = uw.ListBox(
-                uw.SimpleFocusListWalker(body)
+                FocusListWalker(body, self.__set_example)
             )
         return self.__options_panels[choice]
 
     def create_example_board(self, example):
         """Create a board with example, used when an option is focused"""
         return uw.ListBox(uw.SimpleListWalker(
-            [uw.Columns([
-                uw.Text(textwrap.dedent(example))
-            ])]
+            [uw.Columns([uw.Text(example)])]
         ))
 
-    def set_example(self, option):
-        self.notice_board.original_widget = \
-                self.create_example_board(option.example)
+    def __set_example(self, n):
+        choice = MENUS[self.current_selected_menu_idx]
+        if 0 <= n < len(OPTIONS[choice]):
+            option = OPTIONS[choice][n]
+            self.notice_board.original_widget = \
+                    self.create_example_board(option.example)
 
     def create_completion_board(self, contents):
         """Create a board with complete_btn, used when a completion is triggered"""
@@ -496,6 +472,7 @@ class FindView():
     def focus_options(self):
         """Set focus to the first option of current selected menu"""
         self.frame.body.focus_position = self.focus_order('options_panel')
+        self.options_panel.original_widget.set_focus(0)
 
     def focus_inputs(self):
         """Set focus to command input"""

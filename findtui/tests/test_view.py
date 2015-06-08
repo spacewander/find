@@ -128,7 +128,7 @@ class ViewTest(unittest.TestCase):
         self.assertNotEqual(new_board, old_board)
         return new_board
 
-    def test_press_up_or_down_on_options_change_notice(self):
+    def test_focus_on_options_change_notice(self):
         self.choose_menu(0)
         # First, we need to focus on the options_panel
         # and make sure first option not focused
@@ -136,49 +136,38 @@ class ViewTest(unittest.TestCase):
         self.view.options_panel.original_widget.focus_position = 1
         old_board = self.view.notice_board.original_widget
 
-        self.press('up')
+        self.view.options_panel.original_widget.focus_position = 0
+        # Notice that each call of create_xxx_board will create a different board
         old_board = self.assert_board_not_changed(old_board)
 
-        self.press('down')
+        self.view.options_panel.original_widget.focus_position = 1
         old_board = self.assert_board_not_changed(old_board)
-
-        # Each call of `set_notice` will create a new notice_board,
-        # no matter if the text changed
-        self.press(('mouse release',))
-        self.assert_board_not_changed(old_board)
 
         size = len(OPTIONS[MENUS[0]])
         self.view.options_panel.original_widget.focus_position = size - 1
-        old_board = self.view.notice_board.original_widget
-        self.press('down')
-        self.assertEqual(self.view.notice_board.original_widget, old_board)
-
-    def test_press_up_into_last_option(self):
-        self.view.frame.body.focus_position = self.view.focus_order('notice_board')
-        old_board = self.view.notice_board.original_widget
-        self.press('up')
         self.assertNotEqual(self.view.notice_board.original_widget, old_board)
 
-    def test_press_up_on_menu_change_options(self):
-        self.view.menus.focus_position = 1
-        self.press('up')
-        self.assertEqual(self.view.current_selected_menu_idx, 0)
-        self.assert_options_is_from_menu(0)
+    def assert_example_correct(self, example):
+        self.assertEqual(example,
+                self.view.notice_board.original_widget.contents()[0][0].contents[0][0].text)
 
-        # should not change if there will be out of index
-        self.press('up')
-        self.assertEqual(self.view.current_selected_menu_idx, 0)
+    def test_create_correct_example(self):
+        self.choose_menu(0)
+        self.view.frame.body.focus_position = self.view.focus_order('options_panel')
+        self.view.options_panel.original_widget.focus_position = 1
+        example = OPTIONS[MENUS[0]][1].example
+        self.assert_example_correct(example)
 
-    def test_press_down_on_menu_change_options(self):
+        self.view.options_panel.original_widget.focus_position = 0
+        self.assert_example_correct(OPTIONS[MENUS[0]][0].example)
+        self.view.options_panel.original_widget.focus_position = 1
+        self.assert_example_correct(example)
+
+    def test_focus_on_menu_change_options(self):
         the_last = len(MENUS) - 1
-        self.view.menus.focus_position = the_last - 1
-        self.press('down')
+        self.view.menus.focus_position = the_last
         self.assertEqual(self.view.current_selected_menu_idx, the_last)
         self.assert_options_is_from_menu(the_last)
-
-        # should not change if there will be out of index
-        self.press('down')
-        self.assertEqual(self.view.current_selected_menu_idx, the_last)
 
     def test_press_completion_trigger_on_path_input(self):
         self.view.frame.body.focus_position = self.view.focus_order('path_input')
