@@ -76,6 +76,14 @@ That's all. Now you can run it with `findtui`:
 
 4. support both GNU version and BSD version
 
+5. show examples for frequently-used options
+
+    ![example](images/example.png)
+
 ## More idea?
 
 If you have any ideas to make this tool more useful/efficient, don't hesitate in sending a pr or opening an issue.
+
+## Changelog
+
+See [Changelog](Changelog.md)
