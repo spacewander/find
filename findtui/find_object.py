@@ -39,11 +39,7 @@ class FindObject:
 
     def toCmd(self):
         if self.exec_cmd != '':
-            # Use '{} ;' instead of '{} \;' or '{} +'.
-            # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
-            # and '{} +' is used less frequently.
-            cmd = "find %s %s -exec %s {} ;" % (self.path, self.opts,
-                                                 self.exec_cmd)
+            cmd = "find %s %s %s" % (self.path, self.opts, self.exec_cmd)
         else:
             cmd = "find %s %s" % (self.path, self.opts)
         return cmd.rstrip()

@@ -413,3 +413,6 @@ for k in OPTIONS:
     for opt in OPTIONS[k]:
         OPTION_DATA['-'+opt.name] = "-%s -- %s" % (opt.name, opt.description)
 
+# ACTION_OPTIONS : delete, ls, print
+ACTION_OPTIONS = set(opt.name for opt in OPTIONS['Actions'])
+

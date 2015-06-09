@@ -71,7 +71,7 @@ class ViewTest(unittest.TestCase):
 
     def test_click_reset_button(self):
         self.model.path = "path"
-        self.model.exec_cmd = "du -h"
+        self.model.exec_cmd = "-exec du -h {} ;"
         self.view.reset_button.keypress((1,1), 'enter')
         self.assertEqual("find path  -exec du -h {} ;",
                          self.cmd())

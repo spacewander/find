@@ -1,8 +1,12 @@
 import os
 from functools import reduce
 
-from .options import  OPTION_NAMES, OPTION_DATA
+from .options import  OPTION_NAMES, OPTION_DATA, ACTION_OPTIONS
 from .find_object import FindObject
+
+# use enum if py3.4 is default
+OPTION_CHANGE = 0
+ACTION_CHANGE = 1
 
 class FindModel(object):
     def __init__(self):
@@ -10,16 +14,24 @@ class FindModel(object):
         self.exec_cmd = ''
         self.path = ''
         self.option_data = {}
+        self.action_data = {}
         self.options_str = ""
+        self.actions_str = ""
 
-    def reset_cmd(self, option_changed=False):
-        if option_changed:
+    def reset_cmd(self, option_changed=None):
+        if option_changed == OPTION_CHANGE:
             opt_str = ["-%s %s" % (opt, self.option_data[opt]) for opt in self.option_data]
             self.options_str =  " ".join(opt_str)
+        elif option_changed == ACTION_CHANGE:
+            actions_str = ["-%s %s" % (opt, self.action_data[opt]) for opt in self.action_data]
+            self.actions_str =  " ".join(actions_str)
         self.cmd = self.__generate_cmd()
 
     def update_actions(self, new_actions):
-        self.exec_cmd = new_actions
+        # Use '{} ;' instead of '{} \;' or '{} +'.
+        # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
+        # and '{} +' is used less frequently.
+        self.exec_cmd = '-exec ' + new_actions + ' {} ;'
         self.reset_cmd()
 
     def update_command(self, new_command):
@@ -27,11 +39,18 @@ class FindModel(object):
         self.cmd = FindObject(new_command)
 
     def update_options(self, opt, text='', remove=False):
-        if remove:
-            self.option_data.pop(opt, None)
+        if opt in ACTION_OPTIONS:
+            if remove:
+                self.action_data.pop(opt, None)
+            else:
+                self.action_data[opt] = text
+            self.reset_cmd(option_changed=ACTION_CHANGE)
         else:
-            self.option_data[opt] = text
-        self.reset_cmd(option_changed=True)
+            if remove:
+                self.option_data.pop(opt, None)
+            else:
+                self.option_data[opt] = text
+            self.reset_cmd(option_changed=OPTION_CHANGE)
 
     def update_path(self, new_path):
         self.path = new_path
@@ -39,7 +58,11 @@ class FindModel(object):
 
     def __generate_cmd(self):
         """generate final command object from stored data"""
-        return FindObject.build_with(self.path, self.options_str, self.exec_cmd)
+        # if action options are given, ignore executed cmd
+        if self.actions_str != '':
+            return FindObject.build_with(self.path, self.options_str, self.actions_str)
+        else:
+            return FindObject.build_with(self.path, self.options_str, self.exec_cmd)
 
     def complete_any(self, input):
         """
