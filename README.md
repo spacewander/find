@@ -2,6 +2,8 @@
 
 [![Build Status](https://api.travis-ci.org/spacewander/find.png)](http://travis-ci.org/spacewander/find)
 
+[简体中文版描述由此进](README_ZH.md)
+
 Wrap find(1) with terminal UI. Tested with Python 2.7/3.2/3.4
 
 ## Why I write it?
@@ -21,7 +23,19 @@ Guys uses find(1) in terminal sometimes and feel it too complex to work with, li
 
 ## How to use it?
 
-### Step 0 : download it to somewhere
+### install via pip
+
+Download it via pip
+
+```
+[sudo] pip install findtui
+```
+
+Then just run it with `findtui`:
+
+![findtui](images/findtui.png)
+
+### install manually
 
 ```
 cd somewhere
@@ -30,22 +44,11 @@ git clone https://github.com/spacewander/find && git checkout $(git describe --t
 [sudo] pip install -r requirements.txt
 ```
 
-Or download it via pip
-```
-[sudo] pip install findtui
-```
-
-### Step 1 : alias it as find/findtui
-
-If you install it via pip, you can skip this section, just run it with `findtui`.
-
 Add this line to your shell configuration: `alias findtui somewhere/find/main.py`.
 You can alias it as `find`, too. However, if you do this in zsh, zsh will refuse to provide argument completion for `find`. Zsh hates cheat.
 This is not a problem in bash, since bash doesn't provide special completion for find.
 
-That's all. Now you can run it with `findtui`:
-
-![findtui](images/findtui.png)
+That's all. Now you can run it with `findtui`.
 
 ### Features
 
