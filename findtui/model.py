@@ -17,6 +17,8 @@ class FindModel(object):
         self.action_data = {}
         self.options_str = ""
         self.actions_str = ""
+        # man 7 glob
+        self.wildcards = ('*', '?', '[', ']', '{', '}')
 
     def reset_cmd(self, option_changed=None):
         if option_changed == OPTION_CHANGE:
@@ -39,6 +41,15 @@ class FindModel(object):
         self.cmd = FindObject(new_command)
 
     def update_options(self, opt, text='', remove=False):
+        text = str(text)
+        for word in self.wildcards:
+            if word in text:
+                if "'" in text:
+                    text = '"%s"' % text
+                else:
+                    text = "'%s'" % text
+                break
+
         if opt in ACTION_OPTIONS:
             if remove:
                 self.action_data.pop(opt, None)
@@ -53,6 +64,14 @@ class FindModel(object):
             self.reset_cmd(option_changed=OPTION_CHANGE)
 
     def update_path(self, new_path):
+        for word in self.wildcards:
+            if word in new_path:
+                if "'" in new_path:
+                    new_path = '"%s"' % new_path
+                else:
+                    new_path = "'%s'" % new_path
+                break
+
         self.path = new_path
         self.reset_cmd()
 

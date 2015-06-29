@@ -83,6 +83,11 @@ class ModelTest(unittest.TestCase):
         self.model.update_path('path')
         self.assertEqual(self.cmd(), "find path")
 
+        self.model.update_path('path**')
+        self.assertEqual(self.cmd(), "find 'path**'")
+        self.model.update_path("path'*'")
+        self.assertEqual(self.cmd(), "find \"path'*'\"")
+
     def test_update_command(self):
         cmd = 'some cmd'
         self.model.update_command(cmd)
@@ -91,6 +96,10 @@ class ModelTest(unittest.TestCase):
     def test_update_options(self):
         self.model.update_options('some', 'true')
         self.assertEqual(self.model.option_data['some'], 'true')
+        self.model.update_options('some', 'tr*e')
+        self.assertEqual(self.model.option_data['some'], "'tr*e'")
+        self.model.update_options('some', "tr'*'e")
+        self.assertEqual(self.model.option_data['some'], "\"tr'*'e\"")
         self.model.update_options('some', remove=True)
         self.assertNotIn('some', self.model.option_data)
 
