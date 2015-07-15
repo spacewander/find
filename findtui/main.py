@@ -16,7 +16,8 @@ def print_find_result(args):
         print(subprocess.check_output(args, shell=True,
             stderr=subprocess.STDOUT).decode('utf8'), end="")
     except subprocess.CalledProcessError as e:
-        print(e.output, end="")
+        print(e.output, end="", file=sys.stderr)
+        sys.exit(e.returncode)
 
 def main():
     if len(sys.argv) == 1:

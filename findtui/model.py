@@ -1,4 +1,6 @@
 import os
+import pipes
+import shlex
 from functools import reduce
 
 from .options import  OPTION_NAMES, OPTION_DATA, ACTION_OPTIONS
@@ -7,6 +9,11 @@ from .find_object import FindObject
 # use enum if py3.4 is default
 OPTION_CHANGE = 0
 ACTION_CHANGE = 1
+
+def shell_escape(s):
+    if not hasattr(shlex, 'quote'): # for python 2.7
+        return pipes.quote(s)
+    return shlex.quote(s) # for python > 2.7
 
 class FindModel(object):
     def __init__(self):
@@ -17,8 +24,6 @@ class FindModel(object):
         self.action_data = {}
         self.options_str = ""
         self.actions_str = ""
-        # man 7 glob
-        self.wildcards = ('*', '?', '[', ']', '{', '}')
 
     def reset_cmd(self, option_changed=None):
         if option_changed == OPTION_CHANGE:
@@ -41,14 +46,8 @@ class FindModel(object):
         self.cmd = FindObject(new_command)
 
     def update_options(self, opt, text='', remove=False):
-        text = str(text)
-        for word in self.wildcards:
-            if word in text:
-                if "'" in text:
-                    text = '"%s"' % text
-                else:
-                    text = "'%s'" % text
-                break
+        if text != '': # don't need to escape empty string with quotes
+            text = shell_escape(str(text))
 
         if opt in ACTION_OPTIONS:
             if remove:
@@ -64,14 +63,7 @@ class FindModel(object):
             self.reset_cmd(option_changed=OPTION_CHANGE)
 
     def update_path(self, new_path):
-        for word in self.wildcards:
-            if word in new_path:
-                if "'" in new_path:
-                    new_path = '"%s"' % new_path
-                else:
-                    new_path = "'%s'" % new_path
-                break
-
+        new_path = shell_escape(new_path)
         self.path = new_path
         self.reset_cmd()
 
