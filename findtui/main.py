@@ -13,9 +13,10 @@ def print_find_result(args):
     """
     try:
         # WARN: Require python 2.7+
-        print(subprocess.check_output(args, shell=True).decode('utf8'), end="")
-    except subprocess.CalledProcessError:
-        pass
+        print(subprocess.check_output(args, shell=True,
+            stderr=subprocess.STDOUT).decode('utf8'), end="")
+    except subprocess.CalledProcessError as e:
+        print(e.output, end="")
 
 def main():
     if len(sys.argv) == 1:
