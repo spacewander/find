@@ -38,8 +38,13 @@ class FindObject:
         return cmd
 
     def toCmd(self):
-        if self.exec_cmd != '':
-            cmd = "find %s %s %s" % (self.path, self.opts, self.exec_cmd)
+        if self.path != '':
+            cmd = "find %s" % self.path
         else:
-            cmd = "find %s %s" % (self.path, self.opts)
+            cmd = "find "
+
+        if self.exec_cmd != '':
+            cmd += " %s %s" % (self.opts, self.exec_cmd)
+        else:
+            cmd += " %s" % (self.opts)
         return cmd.rstrip()

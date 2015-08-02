@@ -8,7 +8,6 @@ import urwid as uw
 from .model import FindModel
 from .options import (MENUS, OPTIONS, CHECKBOX_OPTION, RADIO_BUTTON_OPTION,
                       PATH_INPUT_OPTION, TEXT_INPUT_OPTION, INT_INPUT_OPTION)
-from .find_object import FindObject
 
 LEN_OF_MENUS = len(MENUS)
 
@@ -638,12 +637,6 @@ class FindView():
     #  UI change interface
     def set_cmd(self, cmd):
         """Set the display text in command input, with given FindObject"""
-        pre = FindObject(self.command_input.edit_text)
-        for attr in ['path', 'exec_cmd']: # no opts
-            if getattr(cmd, attr) == "":
-                pre_value = getattr(pre, attr)
-                setattr(cmd, attr, pre_value)
-
         self.command_input.set_edit_text(cmd.toCmd())
 
 

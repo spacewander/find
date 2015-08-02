@@ -35,10 +35,13 @@ class FindModel(object):
         self.cmd = self.__generate_cmd()
 
     def update_actions(self, new_actions):
-        # Use '{} ;' instead of '{} \;' or '{} +'.
-        # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
-        # and '{} +' is used less frequently.
-        self.exec_cmd = '-exec ' + new_actions + ' {} ;'
+        if new_actions != '':
+            # Use '{} ;' instead of '{} \;' or '{} +'.
+            # The backslant in '{} \;' is for shell's escape(we use Popen, not real shell),
+            # and '{} +' is used less frequently.
+            self.exec_cmd = '-exec ' + new_actions + ' {} ;'
+        else:
+            self.exec_cmd = ''
         self.reset_cmd()
 
     def update_command(self, new_command):
@@ -63,7 +66,8 @@ class FindModel(object):
             self.reset_cmd(option_changed=OPTION_CHANGE)
 
     def update_path(self, new_path):
-        new_path = shell_escape(new_path)
+        if new_path != '':
+            new_path = shell_escape(new_path)
         self.path = new_path
         self.reset_cmd()
 
